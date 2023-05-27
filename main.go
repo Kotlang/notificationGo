@@ -17,10 +17,7 @@ func main() {
 	inject := NewInject()
 
 	bootServer := server.NewGoApiBoot()
-	pb.RegisterLoginServer(bootServer.GrpcServer, inject.LoginService)
-	pb.RegisterProfileServer(bootServer.GrpcServer, inject.ProfileService)
-	pb.RegisterProfileMasterServer(bootServer.GrpcServer, inject.ProfileMasterService)
-	pb.RegisterDeviceInstanceServer(bootServer.GrpcServer, inject.DeviceInstanceService)
+	pb.RegisterNotificationServiceServer(bootServer.GrpcServer, inject.NotificationService)
 
 	bootServer.Start(grpcPort, webPort)
 }
