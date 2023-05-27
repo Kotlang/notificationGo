@@ -1,0 +1,3 @@
+[submodule "notification-model"]
+	path = notification-model
+	url = git@github.com:Kotlang/notification-model.git

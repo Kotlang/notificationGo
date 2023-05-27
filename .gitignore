@@ -1,0 +1,7 @@
+build
+.idea
+generated
+vendor
+.env
+azure_secrets
+.vscode
