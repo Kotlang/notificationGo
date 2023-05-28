@@ -15,3 +15,12 @@ func (a *NotificationDb) DeviceInstance(tenant string) *DeviceInstanceRepository
 
 	return &DeviceInstanceRepository{baseRepo}
 }
+
+func (a *NotificationDb) Event(tenant string) *EventRepository {
+	baseRepo := odm.AbstractRepository[models.EventModel]{
+		Database:       tenant + "_notification",
+		CollectionName: "event",
+	}
+
+	return &EventRepository{baseRepo}
+}
