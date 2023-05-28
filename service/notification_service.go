@@ -11,8 +11,6 @@ import (
 	"google.golang.org/grpc/status"
 
 	pb "github.com/Kotlang/notificationGo/generated"
-
-	"github.com/Microsoft/go-winio/pkg/guid"
 )
 
 type NotificationService struct {
@@ -49,9 +47,9 @@ func (s *NotificationService) RegisterDeviceInstance(ctx context.Context, req *p
 }
 
 func (s *NotificationService) RegisterEvent(ctx context.Context, req *pb.RegisterEventRequest) (*pb.StatusResponse, error) {
-	userId, tenant := auth.GetUserIdAndTenant(ctx)
+	creatorId, tenant := auth.GetUserIdAndTenant(ctx)
 
-	if len(strings.TrimSpace(userId)) == 0 {
+	if len(strings.TrimSpace(creatorId)) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Token is not present.")
 	}
 
@@ -59,21 +57,15 @@ func (s *NotificationService) RegisterEvent(ctx context.Context, req *pb.Registe
 		return nil, status.Error(codes.InvalidArgument, "Event type is empty.")
 	}
 
-	g, err := guid.NewV4()
-	if err != nil {
-		return nil, err
-	}
-
 	event := &models.EventModel{
-		UserId:             userId,
-		EventId:            g.String(),
+		CreatorId:          creatorId,
 		EventType:          req.EventType,
 		TemplateParameters: req.TemplateParameters,
 		IsBroadcast:        req.IsBroadcast,
 		TargetUsers:        req.TargetUsers,
 	}
 
-	err = <-s.db.Event(tenant).Save(event)
+	err := <-s.db.Event(tenant).Save(event)
 	if err != nil {
 		return nil, err
 	} else {
