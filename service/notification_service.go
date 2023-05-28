@@ -45,3 +45,32 @@ func (s *NotificationService) RegisterDeviceInstance(ctx context.Context, req *p
 		}, nil
 	}
 }
+
+func (s *NotificationService) RegisterEvent(ctx context.Context, req *pb.RegisterEventRequest) (*pb.StatusResponse, error) {
+	creatorId, tenant := auth.GetUserIdAndTenant(ctx)
+
+	if len(strings.TrimSpace(creatorId)) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Token is not present.")
+	}
+
+	if len(strings.TrimSpace(req.EventType)) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Event type is empty.")
+	}
+
+	event := &models.EventModel{
+		CreatorId:          creatorId,
+		EventType:          req.EventType,
+		TemplateParameters: req.TemplateParameters,
+		IsBroadcast:        req.IsBroadcast,
+		TargetUsers:        req.TargetUsers,
+	}
+
+	err := <-s.db.Event(tenant).Save(event)
+	if err != nil {
+		return nil, err
+	} else {
+		return &pb.StatusResponse{
+			Status: "success",
+		}, nil
+	}
+}

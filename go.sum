@@ -15,6 +15,8 @@ github.com/AzureAD/microsoft-authentication-library-for-go v0.9.0/go.mod h1:kgDm
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/Kotlang/notificationGo v0.0.0-20230527113125-d48194f1de69 h1:44FW6+wAMoOf+3GUYzAZD42tadX3NmBw31FMRwIc2XY=
 github.com/Kotlang/notificationGo v0.0.0-20230527113125-d48194f1de69/go.mod h1:+AehBKEC9FRZlG0DTQIs9+IXPJvdrCRRGUF3wl4HtyM=
+github.com/Microsoft/go-winio v0.6.1 h1:9/kr64B9VUZrLm5YYwbGtUJnMgqWVOdUAXu6Migciow=
+github.com/Microsoft/go-winio v0.6.1/go.mod h1:LRdKpFKfdobln8UmuiYcKPot9D2v6svN5+sAH+4kjUM=
 github.com/SaiNageswarS/go-api-boot v0.1.28 h1:f6Kew9vbYGcZ/Udz/wavA+RGmfg/3W7gAuknvUUhrFU=
 github.com/SaiNageswarS/go-api-boot v0.1.28/go.mod h1:OOqa0degNi48DMzvTNYvQrBDxDADX1c+SwI3PivXFFo=
 github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=

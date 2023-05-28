@@ -3,6 +3,7 @@ module github.com/Kotlang/notificationGo
 go 1.19
 
 require (
+	github.com/Microsoft/go-winio v0.6.1
 	github.com/SaiNageswarS/go-api-boot v0.1.28
 	google.golang.org/grpc v1.38.0
 	google.golang.org/protobuf v1.26.0
