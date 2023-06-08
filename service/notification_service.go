@@ -24,7 +24,7 @@ func NewNotificationService(db *db.NotificationDb) *NotificationService {
 	}
 }
 
-func (s *NotificationService) RegisterDeviceInstance(ctx context.Context, req *pb.RegisterDeviceInstanceRequest) (*pb.StatusResponse, error) {
+func (s *NotificationService) RegisterDeviceInstance(ctx context.Context, req *pb.RegisterDeviceInstanceRequest) (*pb.NotificationStatusResponse, error) {
 	userId, tenant := auth.GetUserIdAndTenant(ctx)
 
 	if len(strings.TrimSpace(userId)) == 0 {
@@ -40,13 +40,13 @@ func (s *NotificationService) RegisterDeviceInstance(ctx context.Context, req *p
 	if err != nil {
 		return nil, err
 	} else {
-		return &pb.StatusResponse{
+		return &pb.NotificationStatusResponse{
 			Status: "success",
 		}, nil
 	}
 }
 
-func (s *NotificationService) RegisterEvent(ctx context.Context, req *pb.RegisterEventRequest) (*pb.StatusResponse, error) {
+func (s *NotificationService) RegisterEvent(ctx context.Context, req *pb.RegisterEventRequest) (*pb.NotificationStatusResponse, error) {
 	creatorId, tenant := auth.GetUserIdAndTenant(ctx)
 
 	if len(strings.TrimSpace(creatorId)) == 0 {
@@ -69,7 +69,7 @@ func (s *NotificationService) RegisterEvent(ctx context.Context, req *pb.Registe
 	if err != nil {
 		return nil, err
 	} else {
-		return &pb.StatusResponse{
+		return &pb.NotificationStatusResponse{
 			Status: "success",
 		}, nil
 	}
