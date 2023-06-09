@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/Microsoft/go-winio v0.6.1
-	github.com/SaiNageswarS/go-api-boot v0.1.28
+	github.com/SaiNageswarS/go-api-boot v0.1.31
 	google.golang.org/grpc v1.38.0
 	google.golang.org/protobuf v1.26.0
 )
@@ -39,6 +39,7 @@ require (
 	github.com/prometheus/common v0.26.0 // indirect
 	github.com/prometheus/procfs v0.6.0 // indirect
 	github.com/rs/cors v1.7.0 // indirect
+	github.com/thoas/go-funk v0.9.3 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.1.1 // indirect
 	github.com/xdg-go/stringprep v1.0.3 // indirect
