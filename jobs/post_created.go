@@ -5,6 +5,8 @@ import (
 
 	"github.com/Kotlang/notificationGo/db"
 	"github.com/Kotlang/notificationGo/extensions"
+	"github.com/SaiNageswarS/go-api-boot/logger"
+	"go.uber.org/zap"
 )
 
 type postCreated struct {
@@ -22,7 +24,7 @@ func NewPostCreatedJob(db *db.NotificationDb) *postCreated {
 }
 
 func (j *postCreated) Run() (err error) {
-	events := j.db.Event().GetEvent(j.Name, 10, 0)
+	events := j.db.Event().GetEventByEventType(j.Name, 10, 0)
 
 	if len(events) == 0 {
 		return
@@ -34,6 +36,7 @@ func (j *postCreated) Run() (err error) {
 
 		err = extensions.SendMessageToTopic(title, body, event.Topic)
 		if err != nil {
+			logger.Error("Failed sending message to topic", zap.Error(err))
 			return
 		}
 		err = <-j.db.Event().DeleteById(event.Id())

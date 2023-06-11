@@ -9,14 +9,15 @@ import (
 	"go.uber.org/zap"
 )
 
-var fcm_client *FCMClient = &FCMClient{}
+var fcm_client *FirebaseNotificationClient = &FirebaseNotificationClient{}
 
-type FCMClient struct {
+// FCM client
+type FirebaseNotificationClient struct {
 	cached_fcm_client        *messaging.Client
 	fcm_client_creation_lock sync.Mutex
 }
 
-func (fc *FCMClient) GetFCMClient() *messaging.Client {
+func (fc *FirebaseNotificationClient) GetFCMClient() *messaging.Client {
 	fc.fcm_client_creation_lock.Lock()
 	defer fc.fcm_client_creation_lock.Unlock()
 

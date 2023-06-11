@@ -12,7 +12,7 @@ type EventRepository struct {
 	odm.AbstractRepository[models.EventModel]
 }
 
-func (e *EventRepository) GetEvent(eventType string, limit, skip int64) []models.EventModel {
+func (e *EventRepository) GetEventByEventType(eventType string, limit, skip int64) []models.EventModel {
 
 	filters := bson.M{"eventType": eventType}
 

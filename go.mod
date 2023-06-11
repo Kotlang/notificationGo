@@ -3,7 +3,6 @@ module github.com/Kotlang/notificationGo
 go 1.19
 
 require (
-	cloud.google.com/go/firestore v1.10.0
 	firebase.google.com/go/v4 v4.11.0
 	github.com/Microsoft/go-winio v0.6.1
 	github.com/SaiNageswarS/go-api-boot v0.1.31
@@ -18,6 +17,7 @@ require (
 	cloud.google.com/go v0.110.2 // indirect
 	cloud.google.com/go/compute v1.19.0 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
+	cloud.google.com/go/firestore v1.10.0 // indirect
 	cloud.google.com/go/iam v0.13.0 // indirect
 	cloud.google.com/go/longrunning v0.4.2 // indirect
 	cloud.google.com/go/storage v1.30.1 // indirect
