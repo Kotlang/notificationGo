@@ -17,7 +17,7 @@ type Inject struct {
 func NewInject() *Inject {
 	inj := &Inject{}
 
-	inj.JobManager = jobs.NewJobManager("navachar_jobs")
+	inj.JobManager = jobs.NewJobManager("kotlang_jobs")
 
 	inj.NotificationDb = &db.NotificationDb{}
 

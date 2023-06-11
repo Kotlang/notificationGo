@@ -21,10 +21,14 @@ func main() {
 	inject := NewInject()
 
 	bootServer := server.NewGoApiBoot()
-	createPost := jobs.NewCreatePostJob()
-	inject.JobManager.RegisterJob(createPost.Name, time.Second*10, createPost)
+	pb.RegisterNotificationServiceServer(bootServer.GrpcServer, inject.NotificationService)
+
+	// Jobs
+	postCreated := jobs.NewPostCreatedJob(inject.NotificationDb)
+	inject.JobManager.RegisterJob(postCreated.Name, time.Minute*5, postCreated)
 	inject.JobManager.Start()
 
+	// Graceful shutdown
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 
@@ -34,7 +38,6 @@ func main() {
 		bootServer.Stop()
 	}()
 
-	pb.RegisterNotificationServiceServer(bootServer.GrpcServer, inject.NotificationService)
-
+	// Start the server
 	bootServer.Start(grpcPort, webPort)
 }

@@ -18,6 +18,8 @@ type NotificationService struct {
 	db *db.NotificationDb
 }
 
+var topics = []string{"post.created"}
+
 func NewNotificationService(db *db.NotificationDb) *NotificationService {
 	return &NotificationService{
 		db: db,
@@ -34,9 +36,10 @@ func (s *NotificationService) RegisterDeviceInstance(ctx context.Context, req *p
 	deviceInstance := &models.DeviceInstanceModel{
 		LoginId: userId,
 		Token:   req.Token,
+		Tenant:  tenant,
 	}
 
-	err := <-s.db.DeviceInstance(tenant).Save(deviceInstance)
+	err := <-s.db.DeviceInstance().Save(deviceInstance)
 	if err != nil {
 		return nil, err
 	} else {
@@ -57,15 +60,21 @@ func (s *NotificationService) RegisterEvent(ctx context.Context, req *pb.Registe
 		return nil, status.Error(codes.InvalidArgument, "Event type is empty.")
 	}
 
+	topic := strings.TrimSpace(req.Topic)
+	topicSplit := strings.Split(topic, ".")
+	if (len(topicSplit) < 2) || (topicSplit[0] != tenant) {
+		return nil, status.Error(codes.InvalidArgument, "Topic is invalid.")
+	}
+
 	event := &models.EventModel{
 		CreatorId:          creatorId,
 		EventType:          req.EventType,
 		TemplateParameters: req.TemplateParameters,
-		IsBroadcast:        req.IsBroadcast,
+		Topic:              topic,
 		TargetUsers:        req.TargetUsers,
 	}
 
-	err := <-s.db.Event(tenant).Save(event)
+	err := <-s.db.Event().Save(event)
 	if err != nil {
 		return nil, err
 	} else {
@@ -73,4 +82,10 @@ func (s *NotificationService) RegisterEvent(ctx context.Context, req *pb.Registe
 			Status: "success",
 		}, nil
 	}
+}
+
+func (s *NotificationService) GetTopics(ctx context.Context, req *pb.GetTopicsRequest) (*pb.TopicsResponse, error) {
+	return &pb.TopicsResponse{
+		Topics: topics,
+	}, nil
 }
