@@ -2,11 +2,13 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/Kotlang/notificationGo/db"
 	"github.com/Kotlang/notificationGo/models"
 	"github.com/SaiNageswarS/go-api-boot/auth"
+	"github.com/thoas/go-funk"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -84,8 +86,10 @@ func (s *NotificationService) RegisterEvent(ctx context.Context, req *pb.Registe
 	}
 }
 
-func (s *NotificationService) GetTopics(ctx context.Context, req *pb.GetFCMTopicsRequest) (*pb.FCMTopicsResponse, error) {
+func (s *NotificationService) GetFCMTopics(ctx context.Context, req *pb.GetFCMTopicsRequest) (*pb.FCMTopicsResponse, error) {
+	_, tenant := auth.GetUserIdAndTenant(ctx)
+
 	return &pb.FCMTopicsResponse{
-		Topics: topics,
+		Topics: funk.Map(topics, func(topic string) string { return fmt.Sprintf("%s.%s", tenant, topic) }).([]string),
 	}, nil
 }
