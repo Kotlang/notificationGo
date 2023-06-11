@@ -7,7 +7,7 @@ type EventModel struct {
 	CreatorId          string            `bson:"creatorId" json:"creatorId"`
 	EventType          string            `bson:"eventType" json:"eventType"`
 	TemplateParameters map[string]string `bson:"templateParameters" json:"templateParameters"`
-	IsBroadcast        bool              `bson:"isBroadcast" json:"isBroadcast"`
+	Topic              string            `bson:"topic" json:"topic"`
 	TargetUsers        []string          `bson:"targetUsers" json:"targetUsers"`
 }
 

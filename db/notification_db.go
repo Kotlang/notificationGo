@@ -7,18 +7,18 @@ import (
 
 type NotificationDb struct{}
 
-func (a *NotificationDb) DeviceInstance(tenant string) *DeviceInstanceRepository {
+func (a *NotificationDb) DeviceInstance() *DeviceInstanceRepository {
 	baseRepo := odm.AbstractRepository[models.DeviceInstanceModel]{
-		Database:       tenant + "_notification",
+		Database:       "kotlang_notification",
 		CollectionName: "device_instance",
 	}
 
 	return &DeviceInstanceRepository{baseRepo}
 }
 
-func (a *NotificationDb) Event(tenant string) *EventRepository {
+func (a *NotificationDb) Event() *EventRepository {
 	baseRepo := odm.AbstractRepository[models.EventModel]{
-		Database:       tenant + "_notification",
+		Database:       "kotlang_notification",
 		CollectionName: "event",
 	}
 
