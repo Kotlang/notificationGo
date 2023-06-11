@@ -84,8 +84,8 @@ func (s *NotificationService) RegisterEvent(ctx context.Context, req *pb.Registe
 	}
 }
 
-func (s *NotificationService) GetTopics(ctx context.Context, req *pb.GetTopicsRequest) (*pb.TopicsResponse, error) {
-	return &pb.TopicsResponse{
+func (s *NotificationService) GetTopics(ctx context.Context, req *pb.GetFCMTopicsRequest) (*pb.FCMTopicsResponse, error) {
+	return &pb.FCMTopicsResponse{
 		Topics: topics,
 	}, nil
 }
