@@ -25,7 +25,9 @@ func main() {
 
 	// Jobs
 	postCreated := jobs.NewPostCreatedJob(inject.NotificationDb)
+	userCreated := jobs.NewUserCreatedJob(inject.NotificationDb)
 	inject.JobManager.RegisterJob(postCreated.Name, time.Minute*5, postCreated)
+	inject.JobManager.RegisterJob(userCreated.Name, time.Minute*5, userCreated)
 	inject.JobManager.Start()
 
 	// Graceful shutdown

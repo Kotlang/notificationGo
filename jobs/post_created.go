@@ -1,8 +1,6 @@
 package jobs
 
 import (
-	"time"
-
 	"github.com/Kotlang/notificationGo/db"
 	"github.com/Kotlang/notificationGo/extensions"
 	"github.com/SaiNageswarS/go-api-boot/logger"
@@ -13,8 +11,6 @@ type postCreated struct {
 	Name string
 	db   *db.NotificationDb
 }
-
-var Time = time.Now()
 
 func NewPostCreatedJob(db *db.NotificationDb) *postCreated {
 	return &postCreated{
