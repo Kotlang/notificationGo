@@ -54,11 +54,15 @@ func SendMessageToMultipleTokens(title, body string, tokens []string) error {
 
 	response, err := fcmClient.SendMulticast(firebase_app.ctx, message)
 
-	logger.Info("FCM response: ", zap.Int("success_count", response.SuccessCount), zap.Int("failure_count", response.FailureCount))
+	if response != nil {
+		logger.Info("FCM response: ", zap.Int("success_count", response.SuccessCount), zap.Int("failure_count", response.FailureCount))
 
-	if response.Responses != nil {
-		for _, resp := range response.Responses {
-			logger.Error("Response error: ", zap.String("error", resp.Error.Error()))
+		if response.Responses != nil && len(response.Responses) > 0 {
+			for _, resp := range response.Responses {
+				if resp != nil && resp.Error != nil {
+					logger.Error("Response error: ", zap.String("error", resp.Error.Error()))
+				}
+			}
 		}
 	}
 
