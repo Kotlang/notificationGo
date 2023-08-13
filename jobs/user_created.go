@@ -37,7 +37,6 @@ func (j *userCreated) Run() (err error) {
 		tenant := strings.TrimSpace(event.Tenant)
 		if len(tenant) != 0 {
 			ids := event.RedundantUsers
-
 			count := j.db.DeviceInstance().CountFilteredDeviceInstance(ids, tenant)
 			if count > 0 {
 				deviceInstance := j.db.DeviceInstance().GetFilteredDeviceInstance(ids, tenant, 0, count)
