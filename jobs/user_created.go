@@ -2,7 +2,6 @@ package jobs
 
 import (
 	"strings"
-	"time"
 
 	"github.com/Kotlang/notificationGo/db"
 	"github.com/Kotlang/notificationGo/extensions"
@@ -16,8 +15,6 @@ type userCreated struct {
 	Name string
 	db   *db.NotificationDb
 }
-
-var Time = time.Now()
 
 func NewUserCreatedJob(db *db.NotificationDb) *userCreated {
 	return &userCreated{
@@ -37,12 +34,9 @@ func (j *userCreated) Run() (err error) {
 		title := event.TemplateParameters["title"]
 		body := event.TemplateParameters["body"]
 
-		topicSplit := strings.Split(strings.TrimSpace(event.Topic), ".")
-		userId := event.TemplateParameters["userId"]
-
-		if topicSplit != nil && len(topicSplit) > 0 {
-			tenant := topicSplit[0]
-			ids := []string{userId}
+		tenant := strings.TrimSpace(event.Tenant)
+		if len(tenant) != 0 {
+			ids := event.RedundantUsers
 
 			count := j.db.DeviceInstance().CountFilteredDeviceInstance(ids, tenant)
 			if count > 0 {

@@ -20,7 +20,7 @@ type NotificationService struct {
 	db *db.NotificationDb
 }
 
-var topics = []string{"post.created"}
+var topics = []string{"post.created", "user.created", "comment.created", "post.liked", "profile.followed"}
 
 func NewNotificationService(db *db.NotificationDb) *NotificationService {
 	return &NotificationService{
@@ -73,7 +73,9 @@ func (s *NotificationService) RegisterEvent(ctx context.Context, req *pb.Registe
 		EventType:          req.EventType,
 		TemplateParameters: req.TemplateParameters,
 		Topic:              topic,
+		Tenant:             tenant,
 		TargetUsers:        req.TargetUsers,
+		RedundantUsers:     req.RedundantUsers,
 	}
 
 	err := <-s.db.Event().Save(event)
