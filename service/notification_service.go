@@ -20,7 +20,7 @@ type NotificationService struct {
 	db *db.NotificationDb
 }
 
-var topics = []string{"post.created", "user.created", "event.created"}
+var topics = []string{"post.created", "event.created"}
 
 func NewNotificationService(db *db.NotificationDb) *NotificationService {
 	return &NotificationService{
