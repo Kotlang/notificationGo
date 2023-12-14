@@ -1,8 +1,6 @@
 package jobs
 
 import (
-	"fmt"
-
 	"github.com/Kotlang/notificationGo/db"
 	"github.com/Kotlang/notificationGo/extensions"
 	"github.com/SaiNageswarS/go-api-boot/logger"
@@ -38,7 +36,6 @@ func (j *userFollow) Run() (err error) {
 			logger.Error("Failed getting device instance", zap.Error(devInstanceError))
 			continue
 		}
-		fmt.Println("DeviceInstance: ", DeviceInstance.Token)
 
 		err = extensions.SendMessageToToken(title, body, DeviceInstance.Token, nil)
 		if err != nil {
