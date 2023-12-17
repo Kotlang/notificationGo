@@ -9,6 +9,7 @@ type EventModel struct {
 	TemplateParameters map[string]string `bson:"templateParameters" json:"templateParameters"`
 	Topic              string            `bson:"topic" json:"topic"`
 	TargetUsers        []string          `bson:"targetUsers" json:"targetUsers"`
+	Tenant             string            `bson:"tenant" json:"tenant"`
 }
 
 func (m *EventModel) Id() string {

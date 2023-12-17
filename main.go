@@ -26,12 +26,12 @@ func main() {
 	// Jobs
 	postCreated := jobs.NewPostCreatedJob(inject.NotificationDb)
 	userCreated := jobs.NewUserCreatedJob(inject.NotificationDb)
-	eventReminder := jobs.NewEventSubscribedJob(inject.NotificationDb)
+	eventReminder := jobs.NewEventReminderJob(inject.NotificationDb)
 	userFollow := jobs.NewUserFollowJob(inject.NotificationDb)
 	inject.JobManager.RegisterJob(postCreated.Name, time.Minute*5, postCreated)
 	inject.JobManager.RegisterJob(userCreated.Name, time.Minute*5, userCreated)
-	inject.JobManager.RegisterJob(eventReminder.Name, time.Minute*1, eventReminder)
-	inject.JobManager.RegisterJob(userFollow.Name, time.Minute*1, userFollow)
+	inject.JobManager.RegisterJob(eventReminder.Name, time.Minute, eventReminder)
+	inject.JobManager.RegisterJob(userFollow.Name, time.Minute, userFollow)
 	inject.JobManager.Start()
 
 	// Graceful shutdown
