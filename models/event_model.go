@@ -6,6 +6,8 @@ type EventModel struct {
 	EventId            string            `bson:"_id" json:"eventId"`
 	CreatorId          string            `bson:"creatorId" json:"creatorId"`
 	EventType          string            `bson:"eventType" json:"eventType"`
+	Title              string            `bson:"title" json:"title"`
+	Body               string            `bson:"body" json:"body"`
 	TemplateParameters map[string]string `bson:"templateParameters" json:"templateParameters"`
 	Topic              string            `bson:"topic" json:"topic"`
 	TargetUsers        []string          `bson:"targetUsers" json:"targetUsers"`

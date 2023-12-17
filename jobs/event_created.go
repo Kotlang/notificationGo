@@ -27,8 +27,8 @@ func (j *eventCreated) Run() (err error) {
 	}
 
 	for _, event := range events {
-		title := event.TemplateParameters["title"]
-		body := event.TemplateParameters["body"]
+		title := event.Title
+		body := event.Body
 
 		err = extensions.SendMessageToTopic(title, body, event.Topic)
 		if err != nil {

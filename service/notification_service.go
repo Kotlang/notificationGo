@@ -75,6 +75,8 @@ func (s *NotificationService) RegisterEvent(ctx context.Context, req *pb.Registe
 		Topic:              topic,
 		TargetUsers:        req.TargetUsers,
 		Tenant:             tenant,
+		Title:              req.Title,
+		Body:               req.Body,
 	}
 
 	err := <-s.db.Event().Save(event)

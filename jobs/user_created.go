@@ -34,8 +34,8 @@ func (j *userCreated) Run() (err error) {
 	}
 
 	for _, event := range events {
-		title := event.TemplateParameters["title"]
-		body := event.TemplateParameters["body"]
+		title := event.Title
+		body := event.Body
 
 		topicSplit := strings.Split(strings.TrimSpace(event.Topic), ".")
 		userId := event.TemplateParameters["userId"]

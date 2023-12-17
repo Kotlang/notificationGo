@@ -66,8 +66,8 @@ func (j *eventReminder) Run() (err error) {
 		}
 
 		// if event start time is less than 10 minutes from now, send the notification
-		title := event.TemplateParameters["title"]
-		body := event.TemplateParameters["body"]
+		title := event.Title
+		body := event.Body
 		subscriberIdList := <-extensions.GetEventSubscribers(ctx, event.TemplateParameters["eventId"])
 
 		// if there are no subscribers, delete the event and log the eventId
