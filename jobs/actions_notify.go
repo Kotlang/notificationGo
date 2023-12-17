@@ -35,7 +35,8 @@ func (j *actionsNotify) Run() (err error) {
 
 		if len(event.TargetUsers) == 0 {
 			logger.Error("Failed sending message to user", zap.Error(status.Error(codes.InvalidArgument, "no target users")))
-			return status.Error(codes.InvalidArgument, "no target users")
+			<-j.db.Event().DeleteById(event.Id())
+			continue
 		}
 
 		// fetch fcmToken from db if err log the event and delete it so it doesn't block the queue
