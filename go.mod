@@ -6,6 +6,7 @@ require (
 	firebase.google.com/go/v4 v4.11.0
 	github.com/Microsoft/go-winio v0.6.1
 	github.com/SaiNageswarS/go-api-boot v0.1.31
+	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 	github.com/thoas/go-funk v0.9.3
 	go.mongodb.org/mongo-driver v1.11.3
 	go.uber.org/zap v1.17.0
@@ -42,7 +43,6 @@ require (
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.2.3 // indirect
 	github.com/googleapis/gax-go/v2 v2.8.0 // indirect
-	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0 // indirect
 	github.com/improbable-eng/grpc-web v0.14.0 // indirect
 	github.com/jinzhu/copier v0.3.2 // indirect
 	github.com/joho/godotenv v1.4.0 // indirect
@@ -56,7 +56,7 @@ require (
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/prometheus/common v0.26.0 // indirect
 	github.com/prometheus/procfs v0.6.0 // indirect
-	github.com/rs/cors v1.7.0 // indirect
+	github.com/rs/cors v1.9.0 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.1.1 // indirect
 	github.com/xdg-go/stringprep v1.0.3 // indirect
