@@ -10,6 +10,7 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/metadata"
 )
 
 type SocialClient struct {
@@ -40,7 +41,7 @@ func (c *SocialClient) getConnection() *grpc.ClientConn {
 	return c.cached_conn
 }
 
-func GetEventSubscribers(grpcContext context.Context, eventId string) chan []string {
+func GetEventSubscribers(grpcContext context.Context, tenant string, eventId string) chan []string {
 	subscribers := make(chan []string)
 
 	go func() {
@@ -56,7 +57,7 @@ func GetEventSubscribers(grpcContext context.Context, eventId string) chan []str
 		}
 
 		client := generated.NewEventsClient(conn)
-		ctx := grpcContext
+		ctx := prepareCallContext(grpcContext, tenant)
 		if ctx == nil {
 			logger.Error("Failed to prepare call context")
 			return
@@ -74,12 +75,20 @@ func GetEventSubscribers(grpcContext context.Context, eventId string) chan []str
 	return subscribers
 }
 
-// func prepareCallContext(grpcContext context.Context) context.Context {
-// 	jwtToken, err := grpc_auth.AuthFromMD(grpcContext, "bearer")
-// 	if err != nil {
-// 		logger.Error("Failed getting jwt token", zap.Error(err))
-// 		return nil
-// 	}
+func prepareCallContext(grpcContext context.Context, tenant string) context.Context {
 
-// 	return metadata.AppendToOutgoingContext(context.Background(), "Authorization", "bearer "+jwtToken)
-// }
+	// prepare the context
+	var md metadata.MD
+	if tenant == "neptune" {
+
+		devJWTToken := os.Getenv("DEFAULT_USER_JWT_TOKEN_DEV")
+		md = metadata.Pairs("authorization", "bearer "+devJWTToken)
+	} else {
+		prodJWTToken := os.Getenv("DEFAULT_USER_JWT_TOKEN_PROD")
+
+		md = metadata.Pairs("authorization", "bearer "+prodJWTToken)
+	}
+	ctx := metadata.NewOutgoingContext(context.TODO(), md)
+
+	return ctx
+}

@@ -2,7 +2,6 @@ package jobs
 
 import (
 	"context"
-	"os"
 	"strconv"
 	"time"
 
@@ -10,8 +9,6 @@ import (
 	"github.com/Kotlang/notificationGo/extensions"
 	"github.com/SaiNageswarS/go-api-boot/logger"
 	"go.uber.org/zap"
-
-	"google.golang.org/grpc/metadata"
 )
 
 type eventReminder struct {
@@ -32,19 +29,8 @@ func (j *eventReminder) Run() (err error) {
 	if len(events) == 0 {
 		return
 	}
-	devJWTToken := os.Getenv("DEFAULT_USER_JWT_TOKEN_DEV")
-	prodJWTToken := os.Getenv("DEFAULT_USER_JWT_TOKEN_PROD")
 
 	for _, event := range events {
-
-		// prepare the context
-		var md metadata.MD
-		if event.Tenant == "neptune" {
-			md = metadata.Pairs("authorization", "bearer "+devJWTToken)
-		} else {
-			md = metadata.Pairs("authorization", "bearer "+prodJWTToken)
-		}
-		ctx := metadata.NewOutgoingContext(context.TODO(), md)
 
 		// parse the event start time if it is not parsable, delete the event and log the eventId
 		eventStartTime, intErr := strconv.ParseInt(event.TemplateParameters["startAt"], 10, 64)
@@ -68,7 +54,7 @@ func (j *eventReminder) Run() (err error) {
 		// if event start time is less than 10 minutes from now, send the notification
 		title := event.Title
 		body := event.Body
-		subscriberIdList := <-extensions.GetEventSubscribers(ctx, event.TemplateParameters["eventId"])
+		subscriberIdList := <-extensions.GetEventSubscribers(context.TODO(), event.Tenant, event.TemplateParameters["eventId"])
 
 		// if there are no subscribers, delete the event and log the eventId
 		if len(subscriberIdList) == 0 {
