@@ -49,3 +49,30 @@ func (e *DeviceInstanceRepository) GetFilteredDeviceInstance(redundantIds []stri
 		return []models.DeviceInstanceModel{}
 	}
 }
+
+// returns device instance containing FCM token by user id
+func (e *DeviceInstanceRepository) GetDeviceInstanceByUserId(userId string) (*models.DeviceInstanceModel, error) {
+	resultChan, errChan := e.FindOneById(userId)
+
+	select {
+	case res := <-resultChan:
+		return res, nil
+	case err := <-errChan:
+		logger.Error("Failed getting device instance", zap.Error(err))
+		return nil, err
+	}
+}
+
+// returns device instance containing FCM token by user id
+func (e *DeviceInstanceRepository) BulkGetDeviceInstanceByUserIds(userId []string) ([]models.DeviceInstanceModel, error) {
+	filter := bson.M{"_id": bson.M{"$in": userId}}
+
+	resultChan, errChan := e.Find(filter, bson.D{}, 0, 0)
+	select {
+	case res := <-resultChan:
+		return res, nil
+	case err := <-errChan:
+		logger.Error("Failed getting device instance", zap.Error(err))
+		return nil, err
+	}
+}

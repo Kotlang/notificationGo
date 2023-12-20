@@ -7,19 +7,19 @@ import (
 	"go.uber.org/zap"
 )
 
-type postCreated struct {
+type eventCreated struct {
 	Name string
 	db   *db.NotificationDb
 }
 
-func NewPostCreatedJob(db *db.NotificationDb) *postCreated {
-	return &postCreated{
-		Name: "post.created",
+func NewEventCreatedJob(db *db.NotificationDb) *eventCreated {
+	return &eventCreated{
+		Name: "event.created",
 		db:   db,
 	}
 }
 
-func (j *postCreated) Run() (err error) {
+func (j *eventCreated) Run() (err error) {
 	events := j.db.Event().GetEventByEventType(j.Name, 10, 0)
 
 	if len(events) == 0 {
@@ -30,10 +30,10 @@ func (j *postCreated) Run() (err error) {
 		title := event.Title
 		body := event.Body
 
-		// send message to topic if err log the event and delete it so it doesn't block the queue
 		err = extensions.SendMessageToTopic(title, body, event.Topic)
 		if err != nil {
-			logger.Error("Failed sending message to topic", zap.Error(err), zap.String("postId", event.TemplateParameters["postId"]))
+			logger.Error("Failed sending message to topic", zap.Error(err))
+			return
 		}
 		err = <-j.db.Event().DeleteById(event.Id())
 		if err != nil {

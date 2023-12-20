@@ -38,6 +38,28 @@ func (fc *FirebaseNotificationClient) GetFCMClient() *messaging.Client {
 	return fc.cached_fcm_client
 }
 
+func SendMessageToToken(title, body, token string, data map[string]string) error {
+	fcmClient := fcm_client.GetFCMClient()
+	if fcmClient == nil {
+		return errors.New("FCM client is nil")
+	}
+
+	message := &messaging.Message{
+		Token: token,
+		Notification: &messaging.Notification{
+			Title: title,
+			Body:  body,
+		},
+		Data: data,
+	}
+
+	response, err := fcmClient.Send(firebase_app.ctx, message)
+
+	logger.Info("FCM response: ", zap.String("response", response))
+
+	return err
+}
+
 func SendMessageToMultipleTokens(title, body string, tokens []string) error {
 	fcmClient := fcm_client.GetFCMClient()
 	if fcmClient == nil {
