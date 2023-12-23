@@ -29,29 +29,30 @@ func (j *userFollow) Run() (err error) {
 	}
 
 	for _, event := range events {
-		title := event.Title
-		body := event.Body
 
+		// if there are no target users, delete the event
 		if len(event.TargetUsers) == 0 {
 			logger.Error("Failed sending message to user", zap.Error(status.Error(codes.InvalidArgument, "no target users")))
 			<-j.db.Event().DeleteById(event.Id())
 			continue
 		}
 
-		// get device instance of followed user
+		// get device instance of followed user if err log the event and delete it so it doesn't block the queue
 		DeviceInstance, devInstanceError := j.db.DeviceInstance().GetDeviceInstanceByUserId(event.TargetUsers[0])
 		if devInstanceError != nil {
 			logger.Error("Failed getting device instance", zap.Error(devInstanceError))
+			<-j.db.Event().DeleteById(event.Id())
 			continue
 		}
 
 		// send message to followed user if err log the event and delete it so it doesn't block the queue
-		err = extensions.SendMessageToToken(title, body, DeviceInstance.Token, event.TemplateParameters)
+		err = extensions.SendMessageToToken(event.Title, event.Body, event.ImageURL, DeviceInstance.Token, event.TemplateParameters)
 		if err != nil {
 			logger.Error("Failed sending message to user", zap.Error(err))
 		}
 		err = <-j.db.Event().DeleteById(event.Id())
 		if err != nil {
+			logger.Error("Failed deleting event", zap.Error(err))
 			return
 		}
 	}

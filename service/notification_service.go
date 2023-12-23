@@ -8,6 +8,7 @@ import (
 	"github.com/Kotlang/notificationGo/db"
 	"github.com/Kotlang/notificationGo/models"
 	"github.com/SaiNageswarS/go-api-boot/auth"
+	"github.com/jinzhu/copier"
 	"github.com/thoas/go-funk"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -20,7 +21,7 @@ type NotificationService struct {
 	db *db.NotificationDb
 }
 
-var topics = []string{"post.created", "event.created", "user.created"}
+var topics = []string{"post.created", "event.created"}
 
 func NewNotificationService(db *db.NotificationDb) *NotificationService {
 	return &NotificationService{
@@ -62,23 +63,18 @@ func (s *NotificationService) RegisterEvent(ctx context.Context, req *pb.Registe
 		return nil, status.Error(codes.InvalidArgument, "Event type is empty.")
 	}
 
+	// check if topic is valid and belongs to the tenant
 	topic := strings.TrimSpace(req.Topic)
 	topicSplit := strings.Split(topic, ".")
 	if (len(topicSplit) < 2) || (topicSplit[0] != tenant) {
 		return nil, status.Error(codes.InvalidArgument, "Topic is invalid.")
 	}
 
-	event := &models.EventModel{
-		CreatorId:          creatorId,
-		EventType:          req.EventType,
-		TemplateParameters: req.TemplateParameters,
-		Topic:              topic,
-		TargetUsers:        req.TargetUsers,
-		Tenant:             tenant,
-		Title:              req.Title,
-		Body:               req.Body,
-	}
+	// copy request to event model
+	event := &models.EventModel{}
+	copier.CopyWithOption(event, req, copier.Option{IgnoreEmpty: true, DeepCopy: true})
 
+	// save event to db and return response to client
 	err := <-s.db.Event().Save(event)
 	if err != nil {
 		return nil, err
