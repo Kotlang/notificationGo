@@ -52,8 +52,6 @@ func (j *eventReminder) Run() (err error) {
 		}
 
 		// if event start time is less than 10 minutes from now, send the notification
-		title := event.Title
-		body := event.Body
 		subscriberIdList := <-extensions.GetEventSubscribers(context.TODO(), event.Tenant, event.TemplateParameters["eventId"])
 
 		// if there are no subscribers, delete the event and log the eventId
@@ -74,9 +72,9 @@ func (j *eventReminder) Run() (err error) {
 		for _, fcmToken := range FCMTokenList {
 			fcmIds = append(fcmIds, fcmToken.Token)
 		}
-		err = extensions.SendMessageToMultipleTokens(title, body, fcmIds)
+		err = extensions.SendMessageToMultipleTokens(event.Title, event.Body, event.ImageURL, fcmIds)
 		if err != nil {
-			logger.Error("Failed to send message", zap.Error(err))
+			logger.Error("Failed to send message", zap.Error(err), zap.String("event", event.TemplateParameters["eventId"]))
 		}
 
 		err = <-j.db.Event().DeleteById(event.Id())

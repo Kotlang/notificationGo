@@ -38,7 +38,7 @@ func (fc *FirebaseNotificationClient) GetFCMClient() *messaging.Client {
 	return fc.cached_fcm_client
 }
 
-func SendMessageToToken(title, body, token string, data map[string]string) error {
+func SendMessageToToken(title, body, imageURL, token string, data map[string]string) error {
 	fcmClient := fcm_client.GetFCMClient()
 	if fcmClient == nil {
 		return errors.New("FCM client is nil")
@@ -47,8 +47,9 @@ func SendMessageToToken(title, body, token string, data map[string]string) error
 	message := &messaging.Message{
 		Token: token,
 		Notification: &messaging.Notification{
-			Title: title,
-			Body:  body,
+			Title:    title,
+			Body:     body,
+			ImageURL: imageURL,
 		},
 		Data: data,
 	}
@@ -60,7 +61,7 @@ func SendMessageToToken(title, body, token string, data map[string]string) error
 	return err
 }
 
-func SendMessageToMultipleTokens(title, body string, tokens []string) error {
+func SendMessageToMultipleTokens(title, body, imageURL string, tokens []string) error {
 	fcmClient := fcm_client.GetFCMClient()
 	if fcmClient == nil {
 		return errors.New("FCM client is nil")
@@ -68,8 +69,9 @@ func SendMessageToMultipleTokens(title, body string, tokens []string) error {
 
 	message := &messaging.MulticastMessage{
 		Notification: &messaging.Notification{
-			Title: title,
-			Body:  body,
+			Title:    title,
+			Body:     body,
+			ImageURL: imageURL,
 		},
 		Tokens: tokens,
 	}
@@ -91,7 +93,7 @@ func SendMessageToMultipleTokens(title, body string, tokens []string) error {
 	return err
 }
 
-func SendMessageToTopic(title, body, topic string) error {
+func SendMessageToTopic(title, body, imageURL, topic string) error {
 	fcmClient := fcm_client.GetFCMClient()
 	if fcmClient == nil {
 		return errors.New("FCM client is nil")
@@ -100,8 +102,9 @@ func SendMessageToTopic(title, body, topic string) error {
 	message := &messaging.Message{
 		Topic: topic,
 		Notification: &messaging.Notification{
-			Title: title,
-			Body:  body,
+			Title:    title,
+			Body:     body,
+			ImageURL: imageURL,
 		},
 	}
 

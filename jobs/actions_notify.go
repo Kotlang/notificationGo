@@ -30,11 +30,12 @@ func (j *actionsNotify) Run() (err error) {
 	}
 
 	for _, event := range events {
-		title := event.Title
-		body := event.Body
 
+		// if no target users delete the event log it and continue
 		if len(event.TargetUsers) == 0 {
-			logger.Error("Failed sending message to user", zap.Error(status.Error(codes.InvalidArgument, "no target users")))
+			logger.Error("Failed sending message to user",
+				zap.Error(status.Error(codes.InvalidArgument, "no target users for event")))
+
 			<-j.db.Event().DeleteById(event.Id())
 			continue
 		}
@@ -42,15 +43,16 @@ func (j *actionsNotify) Run() (err error) {
 		// fetch fcmToken from db if err log the event and delete it so it doesn't block the queue
 		fcmToken, fcmErr := j.db.DeviceInstance().GetDeviceInstanceByUserId(event.TargetUsers[0])
 		if fcmErr != nil {
-			logger.Error("Failed getting device instance", zap.Error(err), zap.String("title", title), zap.String("body", body))
+			logger.Error("Failed getting device instance", zap.Error(err), zap.String("userId", event.TargetUsers[0]))
 			<-j.db.Event().DeleteById(event.Id())
 			continue
 		}
-		err = extensions.SendMessageToToken(title, body, fcmToken.Token, event.TemplateParameters)
+
+		// send message to fcmToken if err log the event and delete it so it doesn't block the queue
+		err = extensions.SendMessageToToken(event.Title, event.Body, event.ImageURL, fcmToken.Token, event.TemplateParameters)
 
 		if err != nil {
 			logger.Error("Failed sending message to user", zap.Error(err))
-			return err
 		}
 
 		err = <-j.db.Event().DeleteById(event.Id())

@@ -40,7 +40,7 @@ func (j *userCreated) Run() (err error) {
 		topicSplit := strings.Split(strings.TrimSpace(event.Topic), ".")
 		userId := event.TemplateParameters["userId"]
 
-		if topicSplit != nil && len(topicSplit) > 0 {
+		if len(topicSplit) > 0 {
 			tenant := topicSplit[0]
 			ids := []string{userId}
 
@@ -52,7 +52,7 @@ func (j *userCreated) Run() (err error) {
 					return deviceInstance.Token
 				}).([]string)
 
-				err = extensions.SendMessageToMultipleTokens(title, body, tokens)
+				err = extensions.SendMessageToMultipleTokens(title, body, event.ImageURL, tokens)
 
 				if err != nil {
 					logger.Error("Failed sending message to topic", zap.Error(err))
