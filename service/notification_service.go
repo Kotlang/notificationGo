@@ -18,12 +18,12 @@ import (
 
 type NotificationService struct {
 	pb.UnimplementedNotificationServiceServer
-	db *db.NotificationDb
+	db db.NotificationDbInterface
 }
 
 var topics = []string{"post.created", "event.created"}
 
-func NewNotificationService(db *db.NotificationDb) *NotificationService {
+func NewNotificationService(db db.NotificationDbInterface) *NotificationService {
 	return &NotificationService{
 		db: db,
 	}

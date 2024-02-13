@@ -5,10 +5,15 @@ import (
 	"github.com/SaiNageswarS/go-api-boot/odm"
 )
 
+type NotificationDbInterface interface {
+	DeviceInstance() DeviceInstanceRepositoryInterface
+	Event() EventRepositoryInterface
+}
+
 type NotificationDb struct{}
 
-func (a *NotificationDb) DeviceInstance() *DeviceInstanceRepository {
-	baseRepo := odm.AbstractRepository[models.DeviceInstanceModel]{
+func (a *NotificationDb) DeviceInstance() DeviceInstanceRepositoryInterface {
+	baseRepo := odm.UnimplementedBootRepository[models.DeviceInstanceModel]{
 		Database:       "kotlang_notification",
 		CollectionName: "device_instance",
 	}
@@ -16,8 +21,8 @@ func (a *NotificationDb) DeviceInstance() *DeviceInstanceRepository {
 	return &DeviceInstanceRepository{baseRepo}
 }
 
-func (a *NotificationDb) Event() *EventRepository {
-	baseRepo := odm.AbstractRepository[models.EventModel]{
+func (a *NotificationDb) Event() EventRepositoryInterface {
+	baseRepo := odm.UnimplementedBootRepository[models.EventModel]{
 		Database:       "kotlang_notification",
 		CollectionName: "event",
 	}

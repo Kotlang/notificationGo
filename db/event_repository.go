@@ -8,8 +8,13 @@ import (
 	"go.uber.org/zap"
 )
 
+type EventRepositoryInterface interface {
+	odm.BootRepository[models.EventModel]
+	GetEventByEventType(eventType string, limit, skip int64) []models.EventModel
+}
+
 type EventRepository struct {
-	odm.AbstractRepository[models.EventModel]
+	odm.UnimplementedBootRepository[models.EventModel]
 }
 
 func (e *EventRepository) GetEventByEventType(eventType string, limit, skip int64) []models.EventModel {

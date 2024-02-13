@@ -11,10 +11,10 @@ import (
 
 type userFollow struct {
 	Name string
-	db   *db.NotificationDb
+	db   db.NotificationDbInterface
 }
 
-func NewUserFollowJob(db *db.NotificationDb) *userFollow {
+func NewUserFollowJob(db db.NotificationDbInterface) *userFollow {
 	return &userFollow{
 		Name: "user.follow",
 		db:   db,

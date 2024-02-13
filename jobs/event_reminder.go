@@ -13,10 +13,10 @@ import (
 
 type eventReminder struct {
 	Name string
-	db   *db.NotificationDb
+	db   db.NotificationDbInterface
 }
 
-func NewEventReminderJob(db *db.NotificationDb) *eventReminder {
+func NewEventReminderJob(db db.NotificationDbInterface) *eventReminder {
 	return &eventReminder{
 		Name: "event.reminder",
 		db:   db,
