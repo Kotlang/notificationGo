@@ -9,10 +9,10 @@ import (
 
 type eventCreated struct {
 	Name string
-	db   *db.NotificationDb
+	db   db.NotificationDbInterface
 }
 
-func NewEventCreatedJob(db *db.NotificationDb) *eventCreated {
+func NewEventCreatedJob(db db.NotificationDbInterface) *eventCreated {
 	return &eventCreated{
 		Name: "event.created",
 		db:   db,

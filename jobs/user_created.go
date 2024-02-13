@@ -14,12 +14,12 @@ import (
 
 type userCreated struct {
 	Name string
-	db   *db.NotificationDb
+	db   db.NotificationDbInterface
 }
 
 var Time = time.Now()
 
-func NewUserCreatedJob(db *db.NotificationDb) *userCreated {
+func NewUserCreatedJob(db db.NotificationDbInterface) *userCreated {
 	return &userCreated{
 		Name: "user.created",
 		db:   db,

@@ -12,10 +12,10 @@ import (
 
 type actionsNotify struct {
 	Name string
-	db   *db.NotificationDb
+	db   db.NotificationDbInterface
 }
 
-func NewActionsNotifyJob(db *db.NotificationDb) *actionsNotify {
+func NewActionsNotifyJob(db db.NotificationDbInterface) *actionsNotify {
 	return &actionsNotify{
 		Name: "actions.notify",
 		db:   db,

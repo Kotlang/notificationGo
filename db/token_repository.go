@@ -8,8 +8,17 @@ import (
 	"go.uber.org/zap"
 )
 
+type DeviceInstanceRepositoryInterface interface {
+	odm.BootRepository[models.DeviceInstanceModel]
+	GetDeviceInstance(pageNumber, pageSize int64) []models.DeviceInstanceModel
+	CountFilteredDeviceInstance(redundantIds []string, tenant string) int64
+	GetFilteredDeviceInstance(redundantIds []string, tenant string, pageNumber, pageSize int64) []models.DeviceInstanceModel
+	GetDeviceInstanceByUserId(userId string) (*models.DeviceInstanceModel, error)
+	BulkGetDeviceInstanceByUserIds(userId []string) ([]models.DeviceInstanceModel, error)
+}
+
 type DeviceInstanceRepository struct {
-	odm.AbstractRepository[models.DeviceInstanceModel]
+	odm.UnimplementedBootRepository[models.DeviceInstanceModel]
 }
 
 func (e *DeviceInstanceRepository) GetDeviceInstance(pageNumber, pageSize int64) []models.DeviceInstanceModel {
