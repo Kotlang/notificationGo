@@ -9,18 +9,23 @@ import (
 	pb "github.com/Kotlang/notificationGo/generated"
 	"github.com/Kotlang/notificationGo/jobs"
 	"github.com/SaiNageswarS/go-api-boot/server"
+	"github.com/rs/cors"
 )
 
 var grpcPort = ":50051"
 var webPort = ":8081"
 
 func main() {
-	// go-api-boot picks up keyvault name from environment variable.
-	os.Setenv("AZURE-KEYVAULT-NAME", "kotlang-secrets")
-	server.LoadSecretsIntoEnv(true)
-	inject := NewInject()
 
-	bootServer := server.NewGoApiBoot()
+	inject := NewInject()
+	inject.CloudFns.LoadSecretsIntoEnv()
+
+	corsConfig := cors.New(
+		cors.Options{
+			AllowedHeaders: []string{"*"},
+		})
+
+	bootServer := server.NewGoApiBoot(corsConfig)
 	pb.RegisterNotificationServiceServer(bootServer.GrpcServer, inject.NotificationService)
 
 	// Jobs
