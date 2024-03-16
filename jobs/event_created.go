@@ -1,21 +1,25 @@
 package jobs
 
 import (
+	"context"
+
+	"github.com/Kotlang/notificationGo/clients"
 	"github.com/Kotlang/notificationGo/db"
-	"github.com/Kotlang/notificationGo/extensions"
 	"github.com/SaiNageswarS/go-api-boot/logger"
 	"go.uber.org/zap"
 )
 
 type eventCreated struct {
-	Name string
-	db   db.NotificationDbInterface
+	Name               string
+	db                 db.NotificationDbInterface
+	notificationClient clients.NotificationClientInterface
 }
 
 func NewEventCreatedJob(db db.NotificationDbInterface) *eventCreated {
 	return &eventCreated{
-		Name: "event.created",
-		db:   db,
+		Name:               "event.created",
+		db:                 db,
+		notificationClient: clients.NewFCMClient(context.Background()),
 	}
 }
 
@@ -28,7 +32,7 @@ func (j *eventCreated) Run() (err error) {
 
 	for _, event := range events {
 
-		err = extensions.SendMessageToTopic(event.Title, event.Body, event.ImageURL, event.Topic)
+		err = j.notificationClient.SendMessageToTopic(event.Title, event.Body, event.ImageURL, event.Topic)
 		if err != nil {
 			logger.Error("Failed sending message to topic", zap.Error(err))
 			return

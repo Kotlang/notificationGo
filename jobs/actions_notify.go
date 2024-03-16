@@ -1,8 +1,10 @@
 package jobs
 
 import (
+	"context"
+
+	"github.com/Kotlang/notificationGo/clients"
 	"github.com/Kotlang/notificationGo/db"
-	"github.com/Kotlang/notificationGo/extensions"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -11,14 +13,16 @@ import (
 )
 
 type actionsNotify struct {
-	Name string
-	db   db.NotificationDbInterface
+	Name               string
+	db                 db.NotificationDbInterface
+	notificationClient clients.NotificationClientInterface
 }
 
 func NewActionsNotifyJob(db db.NotificationDbInterface) *actionsNotify {
 	return &actionsNotify{
-		Name: "actions.notify",
-		db:   db,
+		Name:               "actions.notify",
+		db:                 db,
+		notificationClient: clients.NewFCMClient(context.Background()),
 	}
 }
 
@@ -49,7 +53,7 @@ func (j *actionsNotify) Run() (err error) {
 		}
 
 		// send message to fcmToken if err log the event and delete it so it doesn't block the queue
-		err = extensions.SendMessageToToken(event.Title, event.Body, event.ImageURL, fcmToken.Token, event.TemplateParameters)
+		err = j.notificationClient.SendMessageToToken(event.Title, event.Body, event.ImageURL, fcmToken.Token, event.TemplateParameters)
 
 		if err != nil {
 			logger.Error("Failed sending message to user", zap.Error(err))

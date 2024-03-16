@@ -5,21 +5,25 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/Kotlang/notificationGo/clients"
 	"github.com/Kotlang/notificationGo/db"
-	"github.com/Kotlang/notificationGo/extensions"
 	"github.com/SaiNageswarS/go-api-boot/logger"
 	"go.uber.org/zap"
 )
 
 type eventReminder struct {
-	Name string
-	db   db.NotificationDbInterface
+	Name               string
+	db                 db.NotificationDbInterface
+	notificationClient clients.NotificationClientInterface
+	socialClient       clients.SocialInterface
 }
 
 func NewEventReminderJob(db db.NotificationDbInterface) *eventReminder {
 	return &eventReminder{
-		Name: "event.reminder",
-		db:   db,
+		Name:               "event.reminder",
+		db:                 db,
+		notificationClient: clients.NewFCMClient(context.Background()),
+		socialClient:       clients.NewSocialClient(),
 	}
 }
 
@@ -52,7 +56,7 @@ func (j *eventReminder) Run() (err error) {
 		}
 
 		// if event start time is less than 10 minutes from now, send the notification
-		subscriberIdList := <-extensions.GetEventSubscribers(context.TODO(), event.Tenant, event.TemplateParameters["eventId"])
+		subscriberIdList := <-j.socialClient.GetEventSubscribers(context.TODO(), event.Tenant, event.TemplateParameters["eventId"])
 
 		// if there are no subscribers, delete the event and log the eventId
 		if len(subscriberIdList) == 0 {
@@ -72,7 +76,7 @@ func (j *eventReminder) Run() (err error) {
 		for _, fcmToken := range FCMTokenList {
 			fcmIds = append(fcmIds, fcmToken.Token)
 		}
-		err = extensions.SendMessageToMultipleTokens(event.Title, event.Body, event.ImageURL, fcmIds)
+		err = j.notificationClient.SendMessageToMultipleTokens(event.Title, event.Body, event.ImageURL, fcmIds)
 		if err != nil {
 			logger.Error("Failed to send message", zap.Error(err), zap.String("event", event.TemplateParameters["eventId"]))
 		}
@@ -82,7 +86,6 @@ func (j *eventReminder) Run() (err error) {
 			logger.Error("Failed to delete event", zap.Error(err))
 			return
 		}
-
 	}
 	return err
 }

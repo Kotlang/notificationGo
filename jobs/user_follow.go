@@ -1,8 +1,8 @@
 package jobs
 
 import (
+	"github.com/Kotlang/notificationGo/clients"
 	"github.com/Kotlang/notificationGo/db"
-	"github.com/Kotlang/notificationGo/extensions"
 	"github.com/SaiNageswarS/go-api-boot/logger"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
@@ -10,8 +10,9 @@ import (
 )
 
 type userFollow struct {
-	Name string
-	db   db.NotificationDbInterface
+	Name               string
+	db                 db.NotificationDbInterface
+	notificationClient clients.NotificationClientInterface
 }
 
 func NewUserFollowJob(db db.NotificationDbInterface) *userFollow {
@@ -46,7 +47,7 @@ func (j *userFollow) Run() (err error) {
 		}
 
 		// send message to followed user if err log the event and delete it so it doesn't block the queue
-		err = extensions.SendMessageToToken(event.Title, event.Body, event.ImageURL, DeviceInstance.Token, event.TemplateParameters)
+		err = j.notificationClient.SendMessageToToken(event.Title, event.Body, event.ImageURL, DeviceInstance.Token, event.TemplateParameters)
 		if err != nil {
 			logger.Error("Failed sending message to user", zap.Error(err))
 		}
