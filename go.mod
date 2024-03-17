@@ -5,7 +5,8 @@ go 1.19
 require (
 	firebase.google.com/go/v4 v4.11.0
 	github.com/Microsoft/go-winio v0.6.1
-	github.com/SaiNageswarS/go-api-boot v0.1.35
+	github.com/SaiNageswarS/go-api-boot v0.1.36-0.20240317033618-fd33fe34f8c3
+	github.com/google/uuid v1.5.0
 	github.com/jinzhu/copier v0.3.2
 	github.com/rs/cors v1.9.0
 	github.com/thoas/go-funk v0.9.3
@@ -46,7 +47,6 @@ require (
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/s2a-go v0.1.7 // indirect
-	github.com/google/uuid v1.5.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.2 // indirect
 	github.com/googleapis/gax-go/v2 v2.12.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0 // indirect

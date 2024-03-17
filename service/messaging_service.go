@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Kotlang/notificationGo/clients"
 	"github.com/Kotlang/notificationGo/db"
@@ -9,6 +10,7 @@ import (
 	"github.com/Kotlang/notificationGo/models"
 	"github.com/SaiNageswarS/go-api-boot/auth"
 	"github.com/jinzhu/copier"
+	"go.mongodb.org/mongo-driver/mongo"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -36,13 +38,20 @@ func (s *MessagingService) BroadcastMessage(ctx context.Context, req *notificati
 	_, tenant := auth.GetUserIdAndTenant(ctx)
 
 	// Get the template
-	exists := s.db.MessagingTemplate(tenant).IsExistsById(req.TemplateId)
-	if !exists {
-		return nil, status.Error(codes.NotFound, "Template not found")
+	templateResChan, errChan := s.db.MessagingTemplate(tenant).FindOneById(req.TemplateId)
+	var template *models.MessagingTemplateModel
+	select {
+	case template = <-templateResChan:
+	case err := <-errChan:
+		if err == mongo.ErrNoDocuments {
+			return nil, status.Error(codes.NotFound, fmt.Sprintf("Template with id %s not found", req.TemplateId))
+		}
+		return nil, err
 	}
 
-	parameters := getParameter(req.MediaParameters, req.TemplateParameters)
+	fmt.Println("Template: ", template)
 
+	parameters := getParameter(req.MediaParameters, req.TemplateParameters)
 	// Send message to the destination
 	_, err := s.messagingClient.SendMessage(req.TemplateId, req.RecipientPhoneNumber, parameters)
 	if err != nil {

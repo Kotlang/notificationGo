@@ -51,6 +51,8 @@ github.com/Microsoft/go-winio v0.6.1 h1:9/kr64B9VUZrLm5YYwbGtUJnMgqWVOdUAXu6Migc
 github.com/Microsoft/go-winio v0.6.1/go.mod h1:LRdKpFKfdobln8UmuiYcKPot9D2v6svN5+sAH+4kjUM=
 github.com/SaiNageswarS/go-api-boot v0.1.35 h1:pCY2zD3LqFc0chYRw7S0c870TopEGUizP6R6qDT1qcM=
 github.com/SaiNageswarS/go-api-boot v0.1.35/go.mod h1:uDrsW6okI31aO6IhUkfZQGB4rVbOdwVLZDD4eDpF1BY=
+github.com/SaiNageswarS/go-api-boot v0.1.36-0.20240317033618-fd33fe34f8c3 h1:6101C8LPsrL9an8wAhipC1USLaPxLpB+myT070s+2DM=
+github.com/SaiNageswarS/go-api-boot v0.1.36-0.20240317033618-fd33fe34f8c3/go.mod h1:uDrsW6okI31aO6IhUkfZQGB4rVbOdwVLZDD4eDpF1BY=
 github.com/aws/aws-sdk-go v1.34.28 h1:sscPpn/Ns3i0F4HPEWAVcwdIRaZZCuL7llJ2/60yPIk=
 github.com/aws/aws-sdk-go v1.34.28/go.mod h1:H7NKnBqNVzoTJpGfLrQkkD+ytBA93eiDYi/+8rV9s48=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
