@@ -9,8 +9,10 @@ import (
 	notificationPb "github.com/Kotlang/notificationGo/generated/notification"
 	"github.com/Kotlang/notificationGo/models"
 	"github.com/SaiNageswarS/go-api-boot/auth"
+	"github.com/SaiNageswarS/go-api-boot/logger"
 	"github.com/jinzhu/copier"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -49,9 +51,10 @@ func (s *MessagingService) BroadcastMessage(ctx context.Context, req *notificati
 		return nil, err
 	}
 
-	fmt.Println("Template: ", template)
+	// TODO: Using Template generate message and save in the database
+	logger.Info("Template: ", zap.Any("template", template))
 
-	parameters := getParameter(req.MediaParameters, req.TemplateParameters)
+	parameters := getParameter(req.MediaParameters, req.HeaderParameters, req.BodyParameters, req.ButtonParameters)
 	// Send message to the destination
 	_, err := s.messagingClient.SendMessage(req.TemplateId, req.RecipientPhoneNumber, parameters)
 	if err != nil {
@@ -79,14 +82,53 @@ func (s *MessagingService) RegisterMessagingTemplate(ctx context.Context, req *n
 }
 
 func getMessagingTemplateModel(req *notificationPb.MessagingTemplate) *models.MessagingTemplateModel {
-	messagingTemplateModel := &models.MessagingTemplateModel{}
-	copier.CopyWithOption(messagingTemplateModel, req, copier.Option{IgnoreEmpty: true, DeepCopy: true})
-	return messagingTemplateModel
+	model := &models.MessagingTemplateModel{}
+	// Copy basic fields with copier
+	copier.CopyWithOption(model, req, copier.Option{IgnoreEmpty: true, DeepCopy: true})
+
+	// copy category
+	model.Category = req.Category.String()
+
+	// copy media parameters
+	if req.MediaParameters != nil {
+		model.MediaParameters.MediaType = req.MediaParameters.MediaType.String()
+	}
+
+	// copy button type
+	model.ButtonType = req.ButtonType.String()
+
+	// copy buttons
+	if req.Buttons != nil && req.Buttons.CallToActionButtons != nil {
+		buttons := make([]models.CallToActionButtons, 0)
+		for _, button := range req.Buttons.CallToActionButtons {
+			buttons = append(buttons, models.CallToActionButtons{
+				ActionType:  button.ActionType.String(),
+				Text:        button.Text,
+				PhoneNumber: button.PhoneNumber,
+				Url: models.Url{
+					UrlType:       button.Url.UrlType.String(),
+					Link:          button.Url.Link,
+					UrlParameters: button.Url.UrlParameters,
+				},
+			})
+		}
+		model.Buttons.CallToActionButtons = buttons
+	}
+
+	return model
 }
 
-func getParameter(mediaParameters *notificationPb.MediaParameters, templateParameters map[string]string) map[string]interface{} {
+func getParameter(mediaParameters *notificationPb.MediaParameters, headerParameters, bodyParameters, buttonParameters map[string]string) map[string]interface{} {
 	parameters := make(map[string]interface{})
-	for k, v := range templateParameters {
+	for k, v := range headerParameters {
+		parameters[k] = v
+	}
+
+	for k, v := range bodyParameters {
+		parameters[k] = v
+	}
+
+	for k, v := range buttonParameters {
 		parameters[k] = v
 	}
 
