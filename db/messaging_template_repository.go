@@ -6,44 +6,52 @@ import (
 	"github.com/SaiNageswarS/go-api-boot/odm"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.uber.org/zap"
+
+	notificationPb "github.com/Kotlang/notificationGo/generated/notification"
 )
 
 type MessagingTemplateRepositoryInterface interface {
 	odm.BootRepository[models.MessagingTemplateModel]
-	GetTemplateByType(templateType string, limit, skip int64) []models.MessagingTemplateModel
-	GetTemplateByName(templateName string) *models.MessagingTemplateModel
+	GetTemplate(notificationFilters *notificationPb.FetchTemplateRequest) (templates []models.MessagingTemplateModel, totalCount int64)
 }
 
 type MessagingTemplateRepository struct {
 	odm.UnimplementedBootRepository[models.MessagingTemplateModel]
 }
 
-func (m *MessagingTemplateRepository) GetTemplateByType(templateType string, limit, skip int64) []models.MessagingTemplateModel {
+func (m *MessagingTemplateRepository) GetTemplate(notificationFilter *notificationPb.FetchTemplateRequest) (templates []models.MessagingTemplateModel, totalCount int64) {
 
-	filters := bson.M{"templateType": templateType}
+	filter := bson.M{}
 
-	resultChan, errChan := m.Find(filters, bson.D{}, limit, skip)
+	if notificationFilter.TemplateId != "" {
+		filter["_id"] = notificationFilter.TemplateId
+	}
+
+	if notificationFilter.TemplateName != "" {
+		filter["templateName"] = notificationFilter.TemplateName
+	}
+
+	skip := notificationFilter.PageNumber * notificationFilter.PageSize
+
+	sort := bson.D{{Key: "createdOn", Value: -1}}
+
+	// fetch templates from db
+	totalCountResChan, countErrChan := m.CountDocuments(filter)
+	templatesResChan, templateErrChan := m.Find(filter, sort, int64(notificationFilter.PageSize), int64(skip))
 
 	select {
-	case res := <-resultChan:
-		return res
-	case err := <-errChan:
+	case totalCount = <-totalCountResChan:
+	case err := <-countErrChan:
+		logger.Error("Failed getting templates count", zap.Error(err))
+		return nil, 0
+	}
+
+	select {
+	case templates = <-templatesResChan:
+		return templates, totalCount
+	case err := <-templateErrChan:
 		logger.Error("Failed getting templates", zap.Error(err))
-		return nil
+		return nil, 0
 	}
-}
 
-func (m *MessagingTemplateRepository) GetTemplateByName(templateName string) *models.MessagingTemplateModel {
-
-	filters := bson.M{"templateName": templateName}
-
-	resultChan, errChan := m.FindOne(filters)
-
-	select {
-	case res := <-resultChan:
-		return res
-	case err := <-errChan:
-		logger.Error("Failed getting template", zap.Error(err))
-		return nil
-	}
 }

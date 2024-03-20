@@ -20,7 +20,7 @@ import (
 type MessagingServiceInterface interface {
 	BroadcastMessage(context.Context, *notificationPb.MesssageRequest) (*notificationPb.StatusResponse, error)
 	RegisterMessagingTemplate(context.Context, *notificationPb.MessagingTemplate) (*notificationPb.StatusResponse, error)
-	GetMessagingTemplate(context.Context, *notificationPb.IdRequest) (*notificationPb.MessagingTemplate, error)
+	FetchMessagingTemplates(context.Context, *notificationPb.FetchTemplateRequest) (*notificationPb.MessagingTemplateList, error)
 }
 
 type MessagingService struct {
@@ -81,6 +81,27 @@ func (s *MessagingService) RegisterMessagingTemplate(ctx context.Context, req *n
 	}, nil
 }
 
+func (s *MessagingService) FetchMessagingTemplates(ctx context.Context, req *notificationPb.FetchTemplateRequest) (*notificationPb.MessagingTemplateList, error) {
+	_, tenant := auth.GetUserIdAndTenant(ctx)
+
+	// check if user is admin
+
+	// Fetch the templates
+	templates, totalCount := s.db.MessagingTemplate(tenant).GetTemplate(req)
+
+	// Convert to protobuf
+	templatesProto := make([]*notificationPb.MessagingTemplate, 0)
+	for _, template := range templates {
+		templatesProto = append(templatesProto, getMessagingTemplatePb(&template))
+	}
+
+	return &notificationPb.MessagingTemplateList{
+		Templates:  templatesProto,
+		TotalCount: int32(totalCount),
+	}, nil
+
+}
+
 func getMessagingTemplateModel(req *notificationPb.MessagingTemplate) *models.MessagingTemplateModel {
 	model := &models.MessagingTemplateModel{}
 	// Copy basic fields with copier
@@ -116,6 +137,47 @@ func getMessagingTemplateModel(req *notificationPb.MessagingTemplate) *models.Me
 	}
 
 	return model
+}
+
+func getMessagingTemplatePb(templateModel *models.MessagingTemplateModel) *notificationPb.MessagingTemplate {
+	templateProto := &notificationPb.MessagingTemplate{}
+	// Copy basic fields with copier
+	copier.CopyWithOption(templateProto, templateModel, copier.Option{IgnoreEmpty: true, DeepCopy: true})
+
+	// copy category
+	templateProto.Category = notificationPb.Category(notificationPb.Category_value[templateModel.Category])
+
+	// copy media parameters
+	if templateModel.MediaParameters.MediaType != "" {
+		templateProto.MediaParameters = &notificationPb.MediaParameters{
+			MediaType: notificationPb.MediaType(notificationPb.MediaType_value[templateModel.MediaParameters.MediaType]),
+			Link:      templateModel.MediaParameters.Link,
+			Filename:  templateModel.MediaParameters.Filename,
+		}
+	}
+
+	// copy button type
+	templateProto.ButtonType = notificationPb.ButtonType(notificationPb.ButtonType_value[templateModel.ButtonType])
+
+	// copy buttons
+	if len(templateModel.Buttons.CallToActionButtons) > 0 {
+		buttons := &notificationPb.Button{}
+		for _, button := range templateModel.Buttons.CallToActionButtons {
+			buttons.CallToActionButtons = append(buttons.CallToActionButtons, &notificationPb.CallToActionButtons{
+				ActionType:  notificationPb.ActionType(notificationPb.ActionType_value[button.ActionType]),
+				Text:        button.Text,
+				PhoneNumber: button.PhoneNumber,
+				Url: &notificationPb.Url{
+					UrlType:       notificationPb.UrlType(notificationPb.UrlType_value[button.Url.UrlType]),
+					Link:          button.Url.Link,
+					UrlParameters: button.Url.UrlParameters,
+				},
+			})
+		}
+		templateProto.Buttons = buttons
+	}
+
+	return templateProto
 }
 
 func getParameter(mediaParameters *notificationPb.MediaParameters, headerParameters, bodyParameters, buttonParameters map[string]string) map[string]interface{} {

@@ -33,7 +33,7 @@ func (a *NotificationDb) Event() EventRepositoryInterface {
 
 func (a *NotificationDb) MessagingTemplate(tenant string) MessagingTemplateRepositoryInterface {
 	baseRepo := odm.UnimplementedBootRepository[models.MessagingTemplateModel]{
-		Database:       tenant + "_kotlang_notification",
+		Database:       tenant + "_notification",
 		CollectionName: "messaging_template",
 	}
 
