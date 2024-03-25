@@ -13,11 +13,11 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	pb "github.com/Kotlang/notificationGo/generated"
+	notificationPb "github.com/Kotlang/notificationGo/generated/notification"
 )
 
 type NotificationService struct {
-	pb.UnimplementedNotificationServiceServer
+	notificationPb.UnimplementedNotificationServiceServer
 	db db.NotificationDbInterface
 }
 
@@ -29,7 +29,7 @@ func NewNotificationService(db db.NotificationDbInterface) *NotificationService 
 	}
 }
 
-func (s *NotificationService) RegisterDeviceInstance(ctx context.Context, req *pb.RegisterDeviceInstanceRequest) (*pb.NotificationStatusResponse, error) {
+func (s *NotificationService) RegisterDeviceInstance(ctx context.Context, req *notificationPb.RegisterDeviceInstanceRequest) (*notificationPb.NotificationStatusResponse, error) {
 	userId, tenant := auth.GetUserIdAndTenant(ctx)
 
 	if len(strings.TrimSpace(userId)) == 0 {
@@ -46,13 +46,13 @@ func (s *NotificationService) RegisterDeviceInstance(ctx context.Context, req *p
 	if err != nil {
 		return nil, err
 	} else {
-		return &pb.NotificationStatusResponse{
+		return &notificationPb.NotificationStatusResponse{
 			Status: "success",
 		}, nil
 	}
 }
 
-func (s *NotificationService) RegisterEvent(ctx context.Context, req *pb.RegisterEventRequest) (*pb.NotificationStatusResponse, error) {
+func (s *NotificationService) RegisterEvent(ctx context.Context, req *notificationPb.RegisterEventRequest) (*notificationPb.NotificationStatusResponse, error) {
 	creatorId, tenant := auth.GetUserIdAndTenant(ctx)
 
 	if len(strings.TrimSpace(creatorId)) == 0 {
@@ -79,16 +79,16 @@ func (s *NotificationService) RegisterEvent(ctx context.Context, req *pb.Registe
 	if err != nil {
 		return nil, err
 	} else {
-		return &pb.NotificationStatusResponse{
+		return &notificationPb.NotificationStatusResponse{
 			Status: "success",
 		}, nil
 	}
 }
 
-func (s *NotificationService) GetFCMTopics(ctx context.Context, req *pb.GetFCMTopicsRequest) (*pb.FCMTopicsResponse, error) {
+func (s *NotificationService) GetFCMTopics(ctx context.Context, req *notificationPb.GetFCMTopicsRequest) (*notificationPb.FCMTopicsResponse, error) {
 	_, tenant := auth.GetUserIdAndTenant(ctx)
 
-	return &pb.FCMTopicsResponse{
+	return &notificationPb.FCMTopicsResponse{
 		Topics: funk.Map(topics, func(topic string) string { return fmt.Sprintf("%s.%s", tenant, topic) }).([]string),
 	}, nil
 }

@@ -1,11 +1,12 @@
 package jobs
 
 import (
+	"context"
 	"strings"
 	"time"
 
+	"github.com/Kotlang/notificationGo/clients"
 	"github.com/Kotlang/notificationGo/db"
-	"github.com/Kotlang/notificationGo/extensions"
 	"github.com/Kotlang/notificationGo/models"
 	"github.com/SaiNageswarS/go-api-boot/logger"
 	"github.com/thoas/go-funk"
@@ -13,16 +14,18 @@ import (
 )
 
 type userCreated struct {
-	Name string
-	db   db.NotificationDbInterface
+	Name               string
+	db                 db.NotificationDbInterface
+	notificationClient clients.NotificationClientInterface
 }
 
 var Time = time.Now()
 
 func NewUserCreatedJob(db db.NotificationDbInterface) *userCreated {
 	return &userCreated{
-		Name: "user.created",
-		db:   db,
+		Name:               "user.created",
+		db:                 db,
+		notificationClient: clients.NewFCMClient(context.Background()),
 	}
 }
 
@@ -52,7 +55,7 @@ func (j *userCreated) Run() (err error) {
 					return deviceInstance.Token
 				}).([]string)
 
-				err = extensions.SendMessageToMultipleTokens(title, body, event.ImageURL, tokens)
+				err = j.notificationClient.SendMessageToMultipleTokens(title, body, event.ImageURL, tokens)
 
 				if err != nil {
 					logger.Error("Failed sending message to topic", zap.Error(err))
