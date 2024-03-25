@@ -32,11 +32,10 @@ func (c *Cache) Add(transID string, item TrimmedDeliveryInfo) {
 
 	fmt.Println("Adding item to cache: ", item, transID)
 	// Load the existing value associated with the key
-	existing, _ := c.data.LoadOrStore(transID, []interface{}{})
-	fmt.Println("Existing value: ", existing)
+	existing, _ := c.data.LoadOrStore(transID, []TrimmedDeliveryInfo{})
 
 	// Append the new item to the existing slice and store it back
-	c.data.Store(transID, append(existing.([]interface{}), item))
+	c.data.Store(transID, append(existing.([]TrimmedDeliveryInfo), item))
 }
 
 // UpdateDB updates the database with the cache contents
@@ -56,7 +55,7 @@ func (c *Cache) UpdateDB() {
 
 		for _, item := range items {
 
-			switch item.Description {
+			switch item.DeliveryStatus {
 			case "Delivered":
 				message.RecievedBy = append(message.RecievedBy, item.Recipient)
 			case "Read":
