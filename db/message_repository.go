@@ -12,6 +12,7 @@ type MessageRepositoryInterface interface {
 	odm.BootRepository[models.MessageModel]
 	GetMessagesByReceiver(receiver string, limit, skip int64) []models.MessageModel
 	GetMessagesBySender(sender string, limit, skip int64) []models.MessageModel
+	GetMessageByTransactionId(transactionId string) *models.MessageModel
 }
 
 type MessageRepository struct {
@@ -64,6 +65,21 @@ func (m *MessageRepository) GetUserChatHistory(user string, limit, skip int64) [
 		return res
 	case err := <-errChan:
 		logger.Error("Failed getting messages", zap.Error(err))
+		return nil
+	}
+}
+
+func (m *MessageRepository) GetMessageByTransactionId(transactionId string) *models.MessageModel {
+
+	filters := bson.M{"transactionId": transactionId}
+
+	resultChan, errChan := m.FindOne(filters)
+
+	select {
+	case res := <-resultChan:
+		return res
+	case err := <-errChan:
+		logger.Error("Failed getting message", zap.Error(err))
 		return nil
 	}
 }
