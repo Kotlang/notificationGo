@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/Kotlang/notificationGo/clients"
@@ -26,10 +27,10 @@ type MessagingServiceInterface interface {
 type MessagingService struct {
 	notificationPb.UnimplementedMessagingServiceServer
 	db              db.NotificationDbInterface
-	messagingClient clients.MessagingClient
+	messagingClient clients.MessagingClientInterface
 }
 
-func NewMessagingService(messagingClient clients.MessagingClient, db db.NotificationDbInterface) *MessagingService {
+func NewMessagingService(messagingClient clients.MessagingClientInterface, db db.NotificationDbInterface) *MessagingService {
 	return &MessagingService{
 		db:              db,
 		messagingClient: messagingClient,
@@ -37,9 +38,9 @@ func NewMessagingService(messagingClient clients.MessagingClient, db db.Notifica
 }
 
 func (s *MessagingService) BroadcastMessage(ctx context.Context, req *notificationPb.MesssageRequest) (*notificationPb.StatusResponse, error) {
-	_, tenant := auth.GetUserIdAndTenant(ctx)
+	userId, tenant := auth.GetUserIdAndTenant(ctx)
 
-	// Get the template
+	//Get the template
 	templateResChan, errChan := s.db.MessagingTemplate(tenant).FindOneById(req.TemplateId)
 	var template *models.MessagingTemplateModel
 	select {
@@ -54,10 +55,67 @@ func (s *MessagingService) BroadcastMessage(ctx context.Context, req *notificati
 	// TODO: Using Template generate message and save in the database
 	logger.Info("Template: ", zap.Any("template", template))
 
+	// message model
+	message := getMessageModel(userId, req)
+
+	// get single map of all parameters
 	parameters := getParameter(req.MediaParameters, req.HeaderParameters, req.BodyParameters, req.ButtonParameters)
+
+	if req.ScheduleInfo != nil && req.ScheduleInfo.IsScheduled {
+
+		// convert parameters to string
+		parametersString, err := json.Marshal(parameters)
+		if err != nil {
+			logger.Error("Failed to marshal parameters", zap.Error(err))
+			return nil, err
+		}
+
+		templateParams := make(map[string]string)
+
+		templateParams["parameters"] = string(parametersString)
+		templateParams["templateId"] = req.TemplateId
+		templateParams["scheduleTime"] = fmt.Sprint(req.GetScheduleInfo().ScheduledTime)
+
+		event := &models.EventModel{
+			CreatorId:          userId,
+			EventType:          "whatsapp.message",
+			Title:              template.Header,
+			Body:               template.Body,
+			TemplateParameters: templateParams,
+			Topic:              "message",
+			TargetUsers:        req.RecipientPhoneNumber,
+			Tenant:             tenant,
+		}
+
+		err = <-s.db.Event().Save(event)
+
+		if err != nil {
+			logger.Error("Failed to schedule message event", zap.Error(err))
+			return nil, err
+		}
+
+		err = <-s.db.Message(tenant).Save(message)
+		if err != nil {
+			logger.Error("Failed to save message info", zap.Error(err))
+			return nil, err
+		}
+
+		return &notificationPb.StatusResponse{
+			Status: "success",
+		}, nil
+
+	}
 	// Send message to the destination
-	_, err := s.messagingClient.SendMessage(req.TemplateId, req.RecipientPhoneNumber, parameters)
+	transactionId, err := s.messagingClient.SendMessage(req.TemplateId, req.RecipientPhoneNumber, parameters)
 	if err != nil {
+		return nil, err
+	}
+
+	// Save the message in the database
+	message.TransactionId = transactionId
+	err = <-s.db.Message(tenant).Save(message)
+	if err != nil {
+		logger.Error("Failed to save message info", zap.Error(err))
 		return nil, err
 	}
 
@@ -99,7 +157,6 @@ func (s *MessagingService) FetchMessagingTemplates(ctx context.Context, req *not
 		Templates:  templatesProto,
 		TotalCount: int32(totalCount),
 	}, nil
-
 }
 
 func getMessagingTemplateModel(req *notificationPb.MessagingTemplate) *models.MessagingTemplateModel {
@@ -204,4 +261,31 @@ func getParameter(mediaParameters *notificationPb.MediaParameters, headerParamet
 		"filename": mediaParameters.Filename,
 	}
 	return parameters
+}
+
+func getMessageModel(sender string, req *notificationPb.MesssageRequest) *models.MessageModel {
+	message := &models.MessageModel{
+		Sender:     sender,
+		Recipients: req.RecipientPhoneNumber,
+		Message:    req.Preview,
+	}
+
+	if req.ScheduleInfo != nil {
+		message.ScheduleInfo = models.ScheduleInfo{
+			IsScheduled:   req.ScheduleInfo.IsScheduled,
+			ScheduledTime: req.ScheduleInfo.ScheduledTime,
+		}
+	}
+
+	if req.MediaParameters != nil {
+		message.MediaParameters = models.MediaParameters{
+			MediaType: req.MediaParameters.MediaType.String(),
+			Link:      req.MediaParameters.Link,
+			Filename:  req.MediaParameters.Filename,
+		}
+	}
+
+	message.ButtonParameters = req.ButtonParameters
+
+	return message
 }

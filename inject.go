@@ -20,7 +20,7 @@ type Inject struct {
 	Handlers            map[string]func(http.ResponseWriter, *http.Request)
 
 	JobManager      *jobs.JobManager
-	MessagingClient clients.MessagingClient
+	MessagingClient clients.MessagingClientInterface
 }
 
 func NewInject() *Inject {
@@ -30,7 +30,8 @@ func NewInject() *Inject {
 
 	inj.NotificationDb = &db.NotificationDb{}
 	inj.CloudFns = &cloud.GCP{}
-	inj.MessagingClient = clients.NewWhatsAppClient("a_157354522561438800", "7d6fd589-db8e-11ee-a317-06db28a47b85", &http.Client{})
+	inj.CloudFns.LoadSecretsIntoEnv()
+	inj.MessagingClient = clients.NewWhatsAppClient()
 
 	inj.NotificationService = service.NewNotificationService(inj.NotificationDb)
 	inj.MessaginService = service.NewMessagingService(inj.MessagingClient, inj.NotificationDb)

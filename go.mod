@@ -7,6 +7,7 @@ require (
 	github.com/Microsoft/go-winio v0.6.1
 	github.com/SaiNageswarS/go-api-boot v0.1.36-0.20240317033618-fd33fe34f8c3
 	github.com/google/uuid v1.5.0
+	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 	github.com/jinzhu/copier v0.3.2
 	github.com/rs/cors v1.9.0
 	github.com/thoas/go-funk v0.9.3
@@ -49,7 +50,6 @@ require (
 	github.com/google/s2a-go v0.1.7 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.2 // indirect
 	github.com/googleapis/gax-go/v2 v2.12.0 // indirect
-	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/klauspost/compress v1.13.6 // indirect
