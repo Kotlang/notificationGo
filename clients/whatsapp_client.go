@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+	"os"
 
 	"github.com/SaiNageswarS/go-api-boot/logger"
 	"go.uber.org/zap"
@@ -17,11 +19,39 @@ type WhatsAppClient struct {
 	client            *http.Client
 }
 
-func NewWhatsAppClient(appId, serviceKey string, client *http.Client) *WhatsAppClient {
-	return &WhatsAppClient{appId, serviceKey, client}
+type ResponseBody struct {
+	Response []ResponseData `json:"response"`
 }
 
-func (w *WhatsAppClient) SendMessage(templateID string, destination []string, parameters map[string]interface{}) (string, error) {
+type ResponseData struct {
+	Code          string `json:"code"`
+	TransactionID string `json:"transid"`
+	Description   string `json:"description"`
+	CorrelationID string `json:"correlationid"`
+}
+
+var whatsappClient *WhatsAppClient
+
+func NewWhatsAppClient() *WhatsAppClient {
+
+	if whatsappClient == nil {
+		appId := os.Getenv("IMI_APP_ID")
+		serviceKey := os.Getenv("IMI_SERVICE_KEY")
+
+		if appId == "" || serviceKey == "" {
+			logger.Error("IMI_APP_ID or IMI_SERVICE_KEY is not set")
+			return nil
+		}
+
+		httpClient := &http.Client{}
+		whatsappClient = &WhatsAppClient{appId, serviceKey, httpClient}
+	}
+
+	return whatsappClient
+}
+
+// SendMessage sends a message to the given destination and returns the transaction ID.
+func (w *WhatsAppClient) SendMessage(templateID string, destination []string, parameters map[string]interface{}) (transactionId string, err error) {
 	payload := getPayload(w.appId, templateID, destination, parameters)
 
 	payloadBytes, err := json.Marshal(payload)
@@ -47,11 +77,27 @@ func (w *WhatsAppClient) SendMessage(templateID string, destination []string, pa
 	}
 	defer response.Body.Close()
 
+	// Read the response body
+	responseBody, err := io.ReadAll(response.Body)
+	if err != nil {
+		logger.Error("Error reading response body", zap.Error(err))
+		return "", err
+	}
+
+	// unmarshal the response body
+	var respBody ResponseBody
+	err = json.Unmarshal(responseBody, &respBody)
+	if err != nil {
+		logger.Error("Error unmarshalling response body", zap.Error(err))
+		return "", err
+	}
+
 	if response.StatusCode != http.StatusOK {
+		logger.Error("Failed to send message", zap.String("status", response.Status))
 		return "", fmt.Errorf("failed to send message: %s", response.Status)
 	}
 
-	return "Message sent successfully", nil
+	return respBody.Response[0].TransactionID, nil
 }
 
 func getPayload(appID, templateID string, destination []string, parameters map[string]interface{}) map[string]interface{} {

@@ -15,7 +15,7 @@ type eventReminder struct {
 	Name               string
 	db                 db.NotificationDbInterface
 	notificationClient clients.NotificationClientInterface
-	socialClient       clients.SocialInterface
+	socialClient       clients.SocialClientInterface
 }
 
 func NewEventReminderJob(db db.NotificationDbInterface) *eventReminder {

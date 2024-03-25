@@ -19,9 +19,15 @@ type SocialClient struct {
 	connCreationLock sync.Mutex
 }
 
+var socialClientInstance *SocialClient
+
 // NewSocialClient creates a new instance of SocialClient.
 func NewSocialClient() *SocialClient {
-	return &SocialClient{}
+	if socialClientInstance == nil {
+		socialClientInstance = &SocialClient{}
+	}
+
+	return socialClientInstance
 }
 
 // GetEventSubscribers retrieves subscribers for a given event asynchronously.
@@ -41,7 +47,7 @@ func (c *SocialClient) GetEventSubscribers(grpcContext context.Context, tenant s
 		}
 
 		client := socialPb.NewEventsClient(conn)
-		ctx := c.prepareCallContext(grpcContext, tenant)
+		ctx := c.prepareCallContext(tenant)
 		if ctx == nil {
 			logger.Error("Failed to prepare call context")
 			return
@@ -81,7 +87,8 @@ func (c *SocialClient) getConnection() *grpc.ClientConn {
 	return c.cachedConn
 }
 
-func (c *SocialClient) prepareCallContext(grpcContext context.Context, tenant string) context.Context {
+// prepareCallContext prepares the call context with the default user JWT token
+func (c *SocialClient) prepareCallContext(tenant string) context.Context {
 	// prepare the context
 	var md metadata.MD
 	if tenant == "neptune" {

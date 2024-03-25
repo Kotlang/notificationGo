@@ -1,6 +1,8 @@
 package models
 
-import "github.com/Microsoft/go-winio/pkg/guid"
+import (
+	"github.com/google/uuid"
+)
 
 type EventModel struct {
 	EventId            string            `bson:"_id" json:"eventId"`
@@ -17,8 +19,7 @@ type EventModel struct {
 
 func (m *EventModel) Id() string {
 	if len(m.EventId) == 0 {
-		g, _ := guid.NewV4()
-		m.EventId = g.String()
+		m.EventId = uuid.NewString()
 	}
 	return m.EventId
 }
