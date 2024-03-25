@@ -9,7 +9,7 @@ type NotificationDbInterface interface {
 	DeviceInstance() DeviceInstanceRepositoryInterface
 	Event() EventRepositoryInterface
 	MessagingTemplate(tenant string) MessagingTemplateRepositoryInterface
-	Message(tenant string) MessageRepositoryInterface
+	Message() MessageRepositoryInterface
 }
 
 type NotificationDb struct{}
@@ -41,9 +41,9 @@ func (a *NotificationDb) MessagingTemplate(tenant string) MessagingTemplateRepos
 	return &MessagingTemplateRepository{baseRepo}
 }
 
-func (a *NotificationDb) Message(tenant string) MessageRepositoryInterface {
+func (a *NotificationDb) Message() MessageRepositoryInterface {
 	baseRepo := odm.UnimplementedBootRepository[models.MessageModel]{
-		Database:       tenant + "_notification",
+		Database:       "kotlang_notification",
 		CollectionName: "message",
 	}
 
