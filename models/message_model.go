@@ -15,6 +15,7 @@ type MessageModel struct {
 	RecievedBy       []string          `bson:"recievedBy" json:"recievedBy"`
 	ReadBy           []string          `bson:"readBy" json:"readBy"`
 	RespondedBy      []string          `bson:"respondedBy" json:"respondedBy"`
+	FailedRecipients []string          `bson:"failedRecipients" json:"failedRecipients"`
 	CreatedOn        int64             `bson:"createdOn" json:"createdOn"`
 	ScheduleInfo     ScheduleInfo      `bson:"scheduleInfo" json:"scheduleInfo"`
 	MediaParameters  MediaParameters   `bson:"mediaParameters" json:"mediaParameters"`

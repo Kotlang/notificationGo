@@ -4,7 +4,6 @@ go 1.19
 
 require (
 	firebase.google.com/go/v4 v4.11.0
-	github.com/Microsoft/go-winio v0.6.1
 	github.com/SaiNageswarS/go-api-boot v0.1.36-0.20240317033618-fd33fe34f8c3
 	github.com/google/uuid v1.5.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0

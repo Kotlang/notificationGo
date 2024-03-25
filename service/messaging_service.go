@@ -94,7 +94,7 @@ func (s *MessagingService) BroadcastMessage(ctx context.Context, req *notificati
 			return nil, err
 		}
 
-		err = <-s.db.Message(tenant).Save(message)
+		err = <-s.db.Message().Save(message)
 		if err != nil {
 			logger.Error("Failed to save message info", zap.Error(err))
 			return nil, err
@@ -113,7 +113,7 @@ func (s *MessagingService) BroadcastMessage(ctx context.Context, req *notificati
 
 	// Save the message in the database
 	message.TransactionId = transactionId
-	err = <-s.db.Message(tenant).Save(message)
+	err = <-s.db.Message().Save(message)
 	if err != nil {
 		logger.Error("Failed to save message info", zap.Error(err))
 		return nil, err

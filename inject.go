@@ -36,7 +36,7 @@ func NewInject() *Inject {
 	inj.NotificationService = service.NewNotificationService(inj.NotificationDb)
 	inj.MessaginService = service.NewMessagingService(inj.MessagingClient, inj.NotificationDb)
 	inj.Handlers = map[string]func(http.ResponseWriter, *http.Request){
-		"/messaging/incoming-message": extensions.WhatsappIncomingMessageHandler,
+		"/whatsapp/delivery": extensions.DeliveryHandler,
 	}
 
 	return inj
