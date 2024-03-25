@@ -18,7 +18,6 @@ var webPort = ":8081"
 func main() {
 
 	inject := NewInject()
-	inject.CloudFns.LoadSecretsIntoEnv()
 
 	corsConfig := cors.New(
 		cors.Options{

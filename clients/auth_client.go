@@ -28,11 +28,11 @@ func NewAuthClient() *AuthClient {
 	return auth_client
 }
 
-func IsUserAdmin(grpcContext context.Context, userId string) chan bool {
+func (c *AuthClient) IsUserAdmin(grpcContext context.Context, userId string) chan bool {
 	result := make(chan bool)
 
 	go func() {
-		conn := auth_client.getConnection()
+		conn := c.getConnection()
 		if conn == nil {
 			result <- false
 			return

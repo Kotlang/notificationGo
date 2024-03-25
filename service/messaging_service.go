@@ -28,18 +28,25 @@ type MessagingService struct {
 	notificationPb.UnimplementedMessagingServiceServer
 	db              db.NotificationDbInterface
 	messagingClient clients.MessagingClientInterface
+	authClient      clients.AuthClientInterface
 }
 
-func NewMessagingService(messagingClient clients.MessagingClientInterface, db db.NotificationDbInterface) *MessagingService {
+func NewMessagingService(messagingClient clients.MessagingClientInterface, db db.NotificationDbInterface, authClient clients.AuthClientInterface) *MessagingService {
 	return &MessagingService{
 		db:              db,
 		messagingClient: messagingClient,
+		authClient:      authClient,
 	}
 }
 
 func (s *MessagingService) BroadcastMessage(ctx context.Context, req *notificationPb.MesssageRequest) (*notificationPb.StatusResponse, error) {
 	userId, tenant := auth.GetUserIdAndTenant(ctx)
 
+	// check if user is admin
+	if !<-s.authClient.IsUserAdmin(ctx, userId) {
+		logger.Error("User is not admin", zap.String("userId", userId))
+		return nil, status.Error(codes.PermissionDenied, "User is not admin")
+	}
 	//Get the template
 	templateResChan, errChan := s.db.MessagingTemplate(tenant).FindOneById(req.TemplateId)
 	var template *models.MessagingTemplateModel
@@ -52,7 +59,7 @@ func (s *MessagingService) BroadcastMessage(ctx context.Context, req *notificati
 		return nil, err
 	}
 
-	// TODO: Using Template generate message and save in the database
+	// TODO: Add validation for template and parameters recieved
 	logger.Info("Template: ", zap.Any("template", template))
 
 	// message model
@@ -125,7 +132,13 @@ func (s *MessagingService) BroadcastMessage(ctx context.Context, req *notificati
 }
 
 func (s *MessagingService) RegisterMessagingTemplate(ctx context.Context, req *notificationPb.MessagingTemplate) (*notificationPb.StatusResponse, error) {
-	_, tenant := auth.GetUserIdAndTenant(ctx)
+	userId, tenant := auth.GetUserIdAndTenant(ctx)
+
+	// check if user is admin
+	if !<-s.authClient.IsUserAdmin(ctx, userId) {
+		logger.Error("User is not admin", zap.String("userId", userId))
+		return nil, status.Error(codes.PermissionDenied, "User is not admin")
+	}
 
 	// Register the template
 	messagingTemplateModel := getMessagingTemplateModel(req)
@@ -140,9 +153,13 @@ func (s *MessagingService) RegisterMessagingTemplate(ctx context.Context, req *n
 }
 
 func (s *MessagingService) FetchMessagingTemplates(ctx context.Context, req *notificationPb.FetchTemplateRequest) (*notificationPb.MessagingTemplateList, error) {
-	_, tenant := auth.GetUserIdAndTenant(ctx)
+	userId, tenant := auth.GetUserIdAndTenant(ctx)
 
 	// check if user is admin
+	if !<-s.authClient.IsUserAdmin(ctx, userId) {
+		logger.Error("User is not admin", zap.String("userId", userId))
+		return nil, status.Error(codes.PermissionDenied, "User is not admin")
+	}
 
 	// Fetch the templates
 	templates, totalCount := s.db.MessagingTemplate(tenant).GetTemplate(req)
@@ -155,6 +172,30 @@ func (s *MessagingService) FetchMessagingTemplates(ctx context.Context, req *not
 
 	return &notificationPb.MessagingTemplateList{
 		Templates:  templatesProto,
+		TotalCount: int32(totalCount),
+	}, nil
+}
+
+func (s *MessagingService) FetchMessages(ctx context.Context, req *notificationPb.FetchMessageRequest) (*notificationPb.MessageList, error) {
+	userId, _ := auth.GetUserIdAndTenant(ctx)
+
+	// check if user is admin
+	if !<-s.authClient.IsUserAdmin(ctx, userId) {
+		logger.Error("User is not admin", zap.String("userId", userId))
+		return nil, status.Error(codes.PermissionDenied, "User is not admin")
+	}
+
+	// Fetch the messages
+	messages, totalCount := s.db.Message().GetMessages(req.Filters, int64(req.PageNumber), int64(req.PageSize))
+
+	// Convert to protobuf
+	messagesProto := make([]*notificationPb.MessageProto, 0)
+	for _, message := range messages {
+		messagesProto = append(messagesProto, getMessageProto(&message))
+	}
+
+	return &notificationPb.MessageList{
+		Messages:   messagesProto,
 		TotalCount: int32(totalCount),
 	}, nil
 }
@@ -288,4 +329,11 @@ func getMessageModel(sender string, req *notificationPb.MesssageRequest) *models
 	message.ButtonParameters = req.ButtonParameters
 
 	return message
+}
+
+func getMessageProto(messageModel *models.MessageModel) *notificationPb.MessageProto {
+	messageProto := &notificationPb.MessageProto{}
+	copier.CopyWithOption(messageProto, messageModel, copier.Option{IgnoreEmpty: true, DeepCopy: true})
+
+	return messageProto
 }
