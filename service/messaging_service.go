@@ -4,12 +4,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
+	"slices"
+	"time"
 
 	"github.com/Kotlang/notificationGo/clients"
 	"github.com/Kotlang/notificationGo/db"
 	notificationPb "github.com/Kotlang/notificationGo/generated/notification"
 	"github.com/Kotlang/notificationGo/models"
 	"github.com/SaiNageswarS/go-api-boot/auth"
+	"github.com/SaiNageswarS/go-api-boot/cloud"
 	"github.com/SaiNageswarS/go-api-boot/logger"
 	"github.com/jinzhu/copier"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -29,13 +33,19 @@ type MessagingService struct {
 	db              db.NotificationDbInterface
 	messagingClient clients.MessagingClientInterface
 	authClient      clients.AuthClientInterface
+	cloudFns        cloud.Cloud
 }
 
-func NewMessagingService(messagingClient clients.MessagingClientInterface, db db.NotificationDbInterface, authClient clients.AuthClientInterface) *MessagingService {
+func NewMessagingService(messagingClient clients.MessagingClientInterface,
+	db db.NotificationDbInterface,
+	authClient clients.AuthClientInterface,
+	cloudFns cloud.Cloud) *MessagingService {
+
 	return &MessagingService{
 		db:              db,
 		messagingClient: messagingClient,
 		authClient:      authClient,
+		cloudFns:        cloudFns,
 	}
 }
 
@@ -197,6 +207,41 @@ func (s *MessagingService) FetchMessages(ctx context.Context, req *notificationP
 	return &notificationPb.MessageList{
 		Messages:   messagesProto,
 		TotalCount: int32(totalCount),
+	}, nil
+}
+
+func (s *MessagingService) GetMessageMediaUploadUrl(ctx context.Context, req *notificationPb.MediaUploadRequest) (*notificationPb.MediaUploadUrl, error) {
+	userId, tenant := auth.GetUserIdAndTenant(ctx)
+
+	imagePath := fmt.Sprintf("whatsapp/%s/%s/%d/%d-image.%s", tenant, userId, time.Now().Year(), time.Now().Unix(), req.MediaExtension)
+	socialBucket := os.Getenv("social_bucket")
+	if socialBucket == "" {
+		return nil, status.Error(codes.Internal, "social_bucket is not set")
+	}
+
+	acceptableExtensions := []string{"jpg", "jpeg", "png", "mp4", "webp", "doc", "pdf", "docx"}
+	if !slices.Contains(acceptableExtensions, req.MediaExtension) {
+		return nil, status.Error(codes.InvalidArgument, "Invalid media extension")
+	}
+
+	if req.MediaExtension == "" {
+		req.MediaExtension = "jpg"
+	}
+
+	var contentType string
+
+	if req.MediaExtension == "mp4" || req.MediaExtension == "webp" {
+		contentType = fmt.Sprintf("video/%s", req.MediaExtension)
+	} else if req.MediaExtension == "doc" || req.MediaExtension == "pdf" || req.MediaExtension == "docx" {
+		contentType = fmt.Sprintf("application/%s", req.MediaExtension)
+	} else {
+		contentType = fmt.Sprintf("image/%s", req.MediaExtension)
+	}
+
+	uploadUrl, downloadUrl := s.cloudFns.GetPresignedUrl(socialBucket, imagePath, contentType, 15*time.Minute)
+	return &notificationPb.MediaUploadUrl{
+		UploadUrl: uploadUrl,
+		MediaUrl:  downloadUrl,
 	}, nil
 }
 
