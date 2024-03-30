@@ -186,6 +186,25 @@ func (s *MessagingService) FetchMessagingTemplates(ctx context.Context, req *not
 	}, nil
 }
 
+func (s *MessagingService) DeleteMessagingTemplate(ctx context.Context, req *notificationPb.IdRequest) (*notificationPb.StatusResponse, error) {
+	userId, tenant := auth.GetUserIdAndTenant(ctx)
+
+	// check if user is admin
+	if !<-s.authClient.IsUserAdmin(ctx, userId) {
+		logger.Error("User is not admin", zap.String("userId", userId))
+		return nil, status.Error(codes.PermissionDenied, "User is not admin")
+	}
+
+	err := <-s.db.MessagingTemplate(tenant).DeleteById(req.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	return &notificationPb.StatusResponse{
+		Status: "success",
+	}, nil
+}
+
 func (s *MessagingService) FetchMessages(ctx context.Context, req *notificationPb.FetchMessageRequest) (*notificationPb.MessageList, error) {
 	userId, _ := auth.GetUserIdAndTenant(ctx)
 
