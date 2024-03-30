@@ -237,7 +237,6 @@ func (s *MessagingService) FetchMessages(ctx context.Context, req *notificationP
 func (s *MessagingService) GetMessageMediaUploadUrl(ctx context.Context, req *notificationPb.MediaUploadRequest) (*notificationPb.MediaUploadUrl, error) {
 	userId, tenant := auth.GetUserIdAndTenant(ctx)
 
-	imagePath := fmt.Sprintf("whatsapp/%s/%s/%d/%d-image.%s", tenant, userId, time.Now().Year(), time.Now().Unix(), req.MediaExtension)
 	socialBucket := os.Getenv("social_bucket")
 	if socialBucket == "" {
 		return nil, status.Error(codes.Internal, "social_bucket is not set")
@@ -253,13 +252,18 @@ func (s *MessagingService) GetMessageMediaUploadUrl(ctx context.Context, req *no
 	}
 
 	var contentType string
+	var imagePath string
 
 	if req.MediaExtension == "mp4" || req.MediaExtension == "webp" {
 		contentType = fmt.Sprintf("video/%s", req.MediaExtension)
+		imagePath = fmt.Sprintf("whatsapp/%s/%s/%d/%d-video.%s", tenant, userId, time.Now().Year(), time.Now().Unix(), req.MediaExtension)
 	} else if req.MediaExtension == "doc" || req.MediaExtension == "pdf" || req.MediaExtension == "docx" {
 		contentType = fmt.Sprintf("application/%s", req.MediaExtension)
+		imagePath = fmt.Sprintf("whatsapp/%s/%s/%d/%d-document.%s", tenant, userId, time.Now().Year(), time.Now().Unix(), req.MediaExtension)
 	} else {
 		contentType = fmt.Sprintf("image/%s", req.MediaExtension)
+		imagePath = fmt.Sprintf("whatsapp/%s/%s/%d/%d-image.%s", tenant, userId, time.Now().Year(), time.Now().Unix(), req.MediaExtension)
+
 	}
 
 	uploadUrl, downloadUrl := s.cloudFns.GetPresignedUrl(socialBucket, imagePath, contentType, 15*time.Minute)
