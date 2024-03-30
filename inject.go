@@ -34,7 +34,7 @@ func NewInject() *Inject {
 	inj.MessagingClient = clients.NewWhatsAppClient()
 
 	inj.NotificationService = service.NewNotificationService(inj.NotificationDb)
-	inj.MessaginService = service.NewMessagingService(inj.MessagingClient, inj.NotificationDb, clients.NewAuthClient())
+	inj.MessaginService = service.NewMessagingService(inj.MessagingClient, inj.NotificationDb, clients.NewAuthClient(), inj.CloudFns)
 	inj.Handlers = map[string]func(http.ResponseWriter, *http.Request){
 		"/whatsapp/delivery": extensions.DeliveryHandler,
 	}
