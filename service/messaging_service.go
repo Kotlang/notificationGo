@@ -195,6 +195,11 @@ func (s *MessagingService) DeleteMessagingTemplate(ctx context.Context, req *not
 		return nil, status.Error(codes.PermissionDenied, "User is not admin")
 	}
 
+	// validate the request
+	if req.Id == "" {
+		return nil, status.Error(codes.InvalidArgument, "Id is required")
+	}
+
 	err := <-s.db.MessagingTemplate(tenant).DeleteById(req.Id)
 	if err != nil {
 		return nil, err
