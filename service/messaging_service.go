@@ -288,21 +288,24 @@ func getMessagingTemplateModel(req *notificationPb.MessagingTemplate) *models.Me
 
 	// copy button type
 	model.ButtonType = req.ButtonType.String()
+	fmt.Println("req", req)
 
 	// copy buttons
 	if req.Buttons != nil && req.Buttons.CallToActionButtons != nil {
 		buttons := make([]models.CallToActionButtons, 0)
 		for _, button := range req.Buttons.CallToActionButtons {
-			buttons = append(buttons, models.CallToActionButtons{
-				ActionType:  button.ActionType.String(),
-				Text:        button.Text,
-				PhoneNumber: button.PhoneNumber,
-				Url: models.Url{
-					UrlType:       button.Url.UrlType.String(),
-					Link:          button.Url.Link,
-					UrlParameters: button.Url.UrlParameters,
-				},
-			})
+
+			newButtton := models.CallToActionButtons{}
+			if button.Url != nil {
+				newButtton.Url.UrlType = button.Url.UrlType.String()
+				newButtton.Url.Link = button.Url.Link
+				newButtton.Url.UrlParameters = button.Url.UrlParameters
+			}
+			newButtton.ActionType = button.ActionType.String()
+			newButtton.Text = button.Text
+			newButtton.PhoneNumber = button.PhoneNumber
+
+			buttons = append(buttons, newButtton)
 		}
 		model.Buttons.CallToActionButtons = buttons
 	}
