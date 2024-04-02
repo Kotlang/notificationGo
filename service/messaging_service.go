@@ -384,7 +384,6 @@ func getMessageModel(sender string, req *notificationPb.MesssageRequest) *models
 	message := &models.MessageModel{
 		Sender:     sender,
 		Recipients: req.RecipientPhoneNumber,
-		Message:    req.Preview,
 	}
 
 	if req.ScheduleInfo != nil {
@@ -403,6 +402,9 @@ func getMessageModel(sender string, req *notificationPb.MesssageRequest) *models
 	}
 
 	message.ButtonParameters = req.ButtonParameters
+	message.HeaderParameters = req.HeaderParameters
+	message.BodyParameters = req.BodyParameters
+	fmt.Println("message", message)
 
 	return message
 }
