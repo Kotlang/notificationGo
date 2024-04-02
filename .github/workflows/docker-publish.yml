@@ -55,7 +55,13 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Push image
+      - name: Push Productioin image
+        run: |
+          if [ "${{ github.ref }}" == "refs/heads/master" ]; then
+            docker push navachar/$IMAGE_NAME:$IMAGE_TAG
+          fi
+      
+      - name: Push Devlopement image
         run: |
           if [ "${{ github.ref }}" == "refs/heads/master" ]; then
             docker push navachar/$IMAGE_NAME:$IMAGE_TAG
