@@ -234,6 +234,29 @@ func (s *MessagingService) FetchMessages(ctx context.Context, req *notificationP
 	}, nil
 }
 
+func (s *MessagingService) FetchMessageById(ctx context.Context, req *notificationPb.IdRequest) (*notificationPb.MessageProto, error) {
+	userId, _ := auth.GetUserIdAndTenant(ctx)
+
+	// check if user is admin
+	if !<-s.authClient.IsUserAdmin(ctx, userId) {
+		logger.Error("User is not admin", zap.String("userId", userId))
+		return nil, status.Error(codes.PermissionDenied, "User is not admin")
+	}
+
+	// Fetch the message
+	messageResChan, errChan := s.db.Message().FindOneById(req.Id)
+
+	select {
+	case message := <-messageResChan:
+		return getMessageProto(message), nil
+	case err := <-errChan:
+		if err == mongo.ErrNoDocuments {
+			return nil, status.Error(codes.NotFound, fmt.Sprintf("Message with id %s not found", req.Id))
+		}
+		return nil, err
+	}
+}
+
 func (s *MessagingService) GetMessageMediaUploadUrl(ctx context.Context, req *notificationPb.MediaUploadRequest) (*notificationPb.MediaUploadUrl, error) {
 	userId, tenant := auth.GetUserIdAndTenant(ctx)
 
@@ -288,7 +311,6 @@ func getMessagingTemplateModel(req *notificationPb.MessagingTemplate) *models.Me
 
 	// copy button type
 	model.ButtonType = req.ButtonType.String()
-	fmt.Println("req", req)
 
 	// copy buttons
 	if req.Buttons != nil && req.Buttons.CallToActionButtons != nil {
@@ -381,30 +403,11 @@ func getParameter(mediaParameters *notificationPb.MediaParameters, headerParamet
 }
 
 func getMessageModel(sender string, req *notificationPb.MesssageRequest) *models.MessageModel {
-	message := &models.MessageModel{
-		Sender:     sender,
-		Recipients: req.RecipientPhoneNumber,
-	}
+	message := &models.MessageModel{}
+	copier.CopyWithOption(message, req, copier.Option{IgnoreEmpty: true, DeepCopy: true})
 
-	if req.ScheduleInfo != nil {
-		message.ScheduleInfo = models.ScheduleInfo{
-			IsScheduled:   req.ScheduleInfo.IsScheduled,
-			ScheduledTime: req.ScheduleInfo.ScheduledTime,
-		}
-	}
-
-	if req.MediaParameters != nil {
-		message.MediaParameters = models.MediaParameters{
-			MediaType: req.MediaParameters.MediaType.String(),
-			Link:      req.MediaParameters.Link,
-			Filename:  req.MediaParameters.Filename,
-		}
-	}
-
-	message.ButtonParameters = req.ButtonParameters
-	message.HeaderParameters = req.HeaderParameters
-	message.BodyParameters = req.BodyParameters
-	fmt.Println("message", message)
+	message.Recipients = req.RecipientPhoneNumber
+	message.Sender = sender
 
 	return message
 }
@@ -412,6 +415,5 @@ func getMessageModel(sender string, req *notificationPb.MesssageRequest) *models
 func getMessageProto(messageModel *models.MessageModel) *notificationPb.MessageProto {
 	messageProto := &notificationPb.MessageProto{}
 	copier.CopyWithOption(messageProto, messageModel, copier.Option{IgnoreEmpty: true, DeepCopy: true})
-
 	return messageProto
 }
