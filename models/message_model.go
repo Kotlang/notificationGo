@@ -7,6 +7,10 @@ type ScheduleInfo struct {
 	ScheduledTime int64 `bson:"scheduledTime" json:"scheduledTime"`
 }
 
+type Reply struct {
+	Replies []string `bson:"replies" json:"replies"`
+}
+
 type MessageModel struct {
 	MessageId        string            `bson:"_id" json:"messageId"`
 	TemplateId       string            `bson:"templateId" json:"templateId"`
@@ -14,7 +18,7 @@ type MessageModel struct {
 	Recipients       []string          `bson:"recipients" json:"recipients"`
 	RecievedBy       []string          `bson:"recievedBy" json:"recievedBy"`
 	ReadBy           []string          `bson:"readBy" json:"readBy"`
-	RespondedBy      []string          `bson:"respondedBy" json:"respondedBy"`
+	Responses        map[string]Reply  `bson:"responses" json:"responses"`
 	FailedRecipients []string          `bson:"failedRecipients" json:"failedRecipients"`
 	CreatedOn        int64             `bson:"createdOn" json:"createdOn"`
 	ScheduleInfo     ScheduleInfo      `bson:"scheduleInfo" json:"scheduleInfo"`
