@@ -12,7 +12,7 @@ import (
 	"go.uber.org/zap"
 )
 
-const apiURL = "https://api.imiconnect.io/resources/v1/messaging"
+const apiURL = "https://api.imiconnect.in/resources/v1/messaging"
 
 type WhatsAppClient struct {
 	appId, serviceKey string
@@ -52,7 +52,10 @@ func NewWhatsAppClient() *WhatsAppClient {
 
 // SendMessage sends a message to the given destination and returns the transaction ID.
 func (w *WhatsAppClient) SendMessage(templateID string, destination []string, parameters map[string]interface{}) (transactionId string, err error) {
-	payload := getPayload(w.appId, templateID, destination, parameters)
+
+	recipients := ensurePlusPrefixArray(destination)
+
+	payload := getPayload(w.appId, templateID, recipients, parameters)
 
 	payloadBytes, err := json.Marshal(payload)
 	if err != nil {
@@ -113,4 +116,20 @@ func getPayload(appID, templateID string, destination []string, parameters map[s
 		},
 	}
 	return payload
+}
+
+func ensurePlusPrefixArray(recipients []string) []string {
+	for i, recipient := range recipients {
+		// Check if the string is empty
+		if len(recipient) == 0 {
+			recipients[i] = "+"
+			continue
+		}
+
+		// Check if the first character is already '+'
+		if recipient[0] != '+' {
+			recipients[i] = "+" + recipient
+		}
+	}
+	return recipients
 }
