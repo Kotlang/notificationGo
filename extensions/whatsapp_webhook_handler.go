@@ -37,8 +37,13 @@ type TrimmedDeliveryInfo struct {
 	TimeStamp      int64
 }
 
+func (t TrimmedDeliveryInfo) GetType() string {
+	return "delivery"
+}
+
 // DeliveryHandler handles requests for Deliver, Read and failed messages from the WhatsApp API
 func DeliveryHandler(w http.ResponseWriter, r *http.Request) {
+	logger.Info("Received delivery notification: /whatapp/delivery")
 	var req RequestBody
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -63,4 +68,36 @@ func DeliveryHandler(w http.ResponseWriter, r *http.Request) {
 	trimmedTransactionId := strings.Split(deliveryInfo.TransID, "_")[0]
 
 	WhatsappCache.Add(trimmedTransactionId, info)
+}
+
+type ReplyInfo struct {
+	UserID          string    `json:"userId"`
+	Username        string    `json:"username"`
+	Channel         string    `json:"channel"`
+	AppID           string    `json:"appId"`
+	Event           string    `json:"event"`
+	Waid            string    `json:"waid"`
+	Timestamp       time.Time `json:"ts"`
+	TransactionID   string    `json:"tid"`
+	ButtonPayload   string    `json:"buttonPayload"`
+	ButtonText      string    `json:"buttonText"`
+	Errors          string    `json:"errors"`
+	IdentityKeyHash string    `json:"identityKeyHash"`
+}
+
+func (w ReplyInfo) GetType() string {
+	return "buttonReply"
+}
+
+func ReplyHandler(w http.ResponseWriter, r *http.Request) {
+	logger.Info("Received reply notification: /whatsapp/reply")
+	var req ReplyInfo
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	trimmedTransactionId := strings.Split(req.TransactionID, "_")[0]
+
+	WhatsappCache.Add(trimmedTransactionId, req)
 }

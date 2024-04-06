@@ -1,10 +1,10 @@
 package extensions
 
 import (
-	"fmt"
 	"sync"
 
 	"github.com/Kotlang/notificationGo/db"
+	"github.com/Kotlang/notificationGo/models"
 	"github.com/SaiNageswarS/go-api-boot/logger"
 	"go.uber.org/zap"
 )
@@ -13,6 +13,10 @@ import (
 type Cache struct {
 	data sync.Map
 	db   db.NotificationDbInterface
+}
+
+type Cacheable interface {
+	GetType() string
 }
 
 var WhatsappCache *Cache
@@ -28,21 +32,20 @@ func GetCache(db db.NotificationDbInterface) *Cache {
 }
 
 // Add adds a new item to the cache
-func (c *Cache) Add(transID string, item TrimmedDeliveryInfo) {
+func (c *Cache) Add(transID string, item Cacheable) {
 
-	fmt.Println("Adding item to cache: ", item, transID)
 	// Load the existing value associated with the key
-	existing, _ := c.data.LoadOrStore(transID, []TrimmedDeliveryInfo{})
+	existing, _ := c.data.LoadOrStore(transID, []Cacheable{})
 
 	// Append the new item to the existing slice and store it back
-	c.data.Store(transID, append(existing.([]TrimmedDeliveryInfo), item))
+	c.data.Store(transID, append(existing.([]Cacheable), item))
 }
 
 // UpdateDB updates the database with the cache contents
 func (c *Cache) UpdateDB() {
 	c.data.Range(func(key, value interface{}) bool {
 		transID := key.(string)
-		items := value.([]TrimmedDeliveryInfo)
+		items := value.([]Cacheable)
 
 		// fetch the message from the database
 		message := c.db.Message().GetMessageByTransactionId(transID)
@@ -55,15 +58,35 @@ func (c *Cache) UpdateDB() {
 
 		for _, item := range items {
 
-			switch item.DeliveryStatus {
-			case "Delivered":
-				message.RecievedBy = append(message.RecievedBy, item.Recipient)
-			case "Read":
-				message.ReadBy = append(message.ReadBy, item.Recipient)
-			case "Failed":
-				message.FailedRecipients = append(message.FailedRecipients, item.Recipient)
-			default:
+			switch item.GetType() {
+			case "delivery":
+				it := item.(TrimmedDeliveryInfo)
+				switch it.DeliveryStatus {
+				case "Delivered":
+					message.RecievedBy = append(message.RecievedBy, it.Recipient)
+				case "Read":
+					message.ReadBy = append(message.ReadBy, it.Recipient)
+				case "Failed":
+					message.FailedRecipients = append(message.FailedRecipients, it.Recipient)
+				default:
 
+				}
+			case "buttonReply":
+				it := item.(ReplyInfo)
+
+				if message.Responses == nil {
+					message.Responses = make(map[string]models.Reply)
+				}
+
+				if _, ok := message.Responses[it.Waid]; !ok {
+					message.Responses[it.Waid] = models.Reply{
+						Replies: []string{},
+					}
+				}
+
+				message.Responses[it.Waid] = models.Reply{
+					Replies: append(message.Responses[it.Waid].Replies, it.ButtonText),
+				}
 			}
 		}
 
