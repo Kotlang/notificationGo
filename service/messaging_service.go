@@ -92,6 +92,7 @@ func (s *MessagingService) BroadcastMessage(ctx context.Context, req *notificati
 		templateParams["parameters"] = string(parametersString)
 		templateParams["templateId"] = req.TemplateId
 		templateParams["scheduleTime"] = fmt.Sprint(req.GetScheduleInfo().ScheduledTime)
+		templateParams["messageId"] = message.Id()
 
 		event := &models.EventModel{
 			CreatorId:          userId,

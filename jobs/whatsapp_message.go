@@ -3,6 +3,8 @@ package jobs
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
+	"time"
 
 	"github.com/Kotlang/notificationGo/clients"
 	"github.com/Kotlang/notificationGo/db"
@@ -30,10 +32,12 @@ func NewWhatsappMessageJob(db db.NotificationDbInterface) *whatsappMessage {
 }
 
 func (j *whatsappMessage) Run() (err error) {
-	fmt.Println("Running whatsapp message job")
+
 	filter := bson.M{
 		"eventType": j.Name,
-		// "templateParameters.scheduleTime": "1711030784",
+		"templateParameters.scheduleTime": bson.M{
+			"$lte": strconv.Itoa(int(time.Now().Unix())),
+		},
 	}
 
 	eventsChan, errChan := j.db.Event().Find(filter, nil, 10, 0)
@@ -41,6 +45,7 @@ func (j *whatsappMessage) Run() (err error) {
 	var events []models.EventModel
 	select {
 	case events = <-eventsChan:
+		fmt.Println("events", events)
 	case err = <-errChan:
 		logger.Error("Failed getting events", zap.Error(err))
 		return
@@ -69,12 +74,24 @@ func (j *whatsappMessage) Run() (err error) {
 			continue
 		}
 
-		response, err := j.messagingClient.SendMessage(event.TemplateParameters["templateId"], event.TargetUsers, parameters)
-
+		transactionID, err := j.messagingClient.SendMessage(event.TemplateParameters["templateId"], event.TargetUsers, parameters)
 		if err != nil {
 			logger.Error("Error sending Message", zap.Error(err))
 		}
-		logger.Info("Succesfully sent message", zap.Any("response: %v", response))
+		logger.Info("Succesfully sent message", zap.Any("response: %v", transactionID))
+
+		// update transactionId of the message
+		messageResChan, errChan := j.db.Message().FindOneById(event.TemplateParameters["messageId"])
+		select {
+		case message := <-messageResChan:
+			message.TransactionId = transactionID
+			err = <-j.db.Message().Save(message)
+			if err != nil {
+				logger.Error("Failed saving message", zap.Error(err))
+			}
+		case err = <-errChan:
+			logger.Error("Failed getting message", zap.Error(err))
+		}
 
 		err = <-j.db.Event().DeleteById(event.Id())
 		if err != nil {
